@@ -1,0 +1,29 @@
+{
+  "name": "pongbot",
+  "version": "1.0.0",
+  "description": "A Slack bot to track ping-pong stats",
+  "main": "bot.js",
+  "scripts": {
+    "test": "node bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dfridkin/pingpong-bot.git"
+  },
+  "keywords": [
+    "slack",
+    "bot",
+    "ping-pong"
+  ],
+  "author": "Daniel Fridkin & Alex Herbig",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dfridkin/pingpong-bot/issues"
+  },
+  "homepage": "https://github.com/dfridkin/pingpong-bot#readme",
+  "dependencies": {
+    "botkit": "^0.6.7",
+    "forever": "^0.15.3",
+    "fs": "0.0.1-security",
+  }
+}
