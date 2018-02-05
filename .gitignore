@@ -5,3 +5,6 @@ package-lock.json
 TODO
 js/credentials.js
 js/prod\ credentials.js
+json/players.json
+json/records.json
+users_config.json
