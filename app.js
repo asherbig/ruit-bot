@@ -473,20 +473,33 @@ function messageUser(user, message, bot = null) {
 
 hears(['help'], 'direct_message,direct_mention,mention', (bot, message) => {
 
-    const helpMsg = 'To record a game, whoever wins should type "beat @[loser] [loser\'s score]".\nTo check leaderboards, type some variant of "scores" or "leaderboards" and @pongbot.';
+    const helpMsg = 'All commands are done through the ruitbot Direct Messages.\nTo record a game:\n '
+        + '"@Winner1 @Winner2 beat @Lose1 @Loser2 [cups won by]"\n'
+        + 'To check leaderboards:\n'
+        + 'Type some variant of "scores" or "leaderboards"'
+        + 'List all games played by a user:\n*List @Opponent*\n'
+        + 'List all games played by a certain team:\n*List @User1 @User2*\n'
+        + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*';
     bot.reply(message, helpMsg);
     return;
 
 });
 
 function pollUsers(members) {
+    const helpMsg = 'All commands are done through the ruitbot Direct Messages.\nTo record a game:\n '
+        + '"@Winner1 @Winner2 beat @Lose1 @Loser2 [cups won by]"\n'
+        + 'To check leaderboards:\n'
+        + 'Type some variant of "scores" or "leaderboards"'
+        + 'List all games played by a user:\n*List @User*\n'
+        + 'List all games played by a certain team:\n*List @User1 @User2*\n'
+        + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*';
     for (let i = 0; i < members.length; i++) {
         bot.startPrivateConversation(
             { 'user': members[i] }, function (err, convo) {
                 if (!err && convo) {
                     convo.say({
-                        text: 'This is the DM to log ping pong games now!\n'
-                            + 'To log a game, type *"beat @user [losing score]"*.', mrkdown: true
+                        text: 'This is the DM to log beiruit games!\n'
+                            + helpMsg, mrkdown: true
                     });
                 }
             });
@@ -513,9 +526,9 @@ hears(['list'], 'direct_message', (bot, message) => {
     let user2;
 
     let helpMsg = 'Incorrect command format!\n'
-        + 'Format 1: List @Opponent ["time|"score"]\n'
-        + 'Format 2: List @User1 @User2 ["time|"score"]\n'
-        + '(Default sort is time if no sort type is entered)'
+        + 'List all games played by a user:\n*List @User*\n'
+        + 'List all games played by a certain team:\n*List @TeamMember1 @TeamMember2*\n'
+        + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*'
     if (words[0].toUpperCase() !== 'LIST') {
         return;
     }
@@ -523,60 +536,50 @@ hears(['list'], 'direct_message', (bot, message) => {
         messageUser(user, helpMsg, bot);
         return;
     }
-    if (words.length >= 2 && /<@([A-Z0-9]{9})>/.test(words[1])) {
-        //if at least 2 parameters and correct format so far, get user
-        users = 1;
-        user1 = words[1].slice(2, -1);
-    }
-    if (words.length >= 3) {
-        if (/<@([A-Z0-9]{9})>/.test(words[2])) { //it's a user
-            users = 2;
-            user2 = words[2].slice(2, -1);
-        } else if (words[2].toUpperCase() === 'TIME' || words[2].toUpperCase() === 'SCORE') {
-            sort = words[2].toUpperCase();
-        } else { //invalid 3rd parameter
-            messageUser(user, helpMsg, bot);
-            return;
-        }
-    }
-    if (words.length === 4) {
-        if (words[3].toUpperCase() === 'TIME' || words[3].toUpperCase() === 'SCORE' && user2) {
-            sort = words[3].toUpperCase();
-        } else { //invalid 4th parameter
-            messageUser(user, helpMsg, bot);
-            return;
-        }
-    }
-    if (words.length > 4) { //too long of a message
-        messageUser(user, helpMsg, bot);
-        return;
-    }
 
-    //logging all of 1 person's games
-    if (users === 1) {
+    //there are 2 words, and the second one is a user
+    //this means they entered List @User
+    if (words.length === 2 && isUser(words[1])) {
+        //if at least 2 parameters and correct format so far, get user
+        user = words[1].slice(2, -1);
+        let records = JSON.parse(fs.readFileSync('json/records.json'));
         let wins = 0;
         let losses = 0;
-        let outMsg = '';
-        let records = JSON.parse(fs.readFileSync('json/records.json'));
+
         for (let index in records) {
             let game = records[index];
             let date = new Date(game.timestamp * 1000);
-            if (game.winner === user1) { //user was the winner
-                outMsg += '(W) vs <@'+game.loser+'> *' + game['win-score'] 
-                + '-' + game['lose-score'] + '* on '+formatDate(date)+'\n';
+            let w1 = game.winners[0];
+            let w2 = game.winners[1];
+            let l1 = game.losers[0];
+            let l2 = game.losers[1];
+            let cups = game.cups;
+            if (w1 === user) { //if the user was a winner
+                outMsg += '*(W)* with <@'+w2+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
                 wins++;
-            } else if (game.loser === user1){ //user was the loser
-                outMsg += '(L) vs <@'+game.winner+'> *' + game['lose-score'] 
-                + '-' + game['win-score'] + '* on '+formatDate(date)+'\n';
+            } else if (w2 === user) { //if the user was a winner
+                outMsg += '*(W)* with <@'+w1+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                wins++;
+            } else if (l1 === user) { //if the user was a loser
+                outMsg += '*(L)* with <@'+l2+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                losses++
+            } else if (l2 === user){ //if the user was a loser
+                outMsg += '*(L)* with <@'+l1+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
                 losses++
             }
         }
-        outMsg = '*<@'+user1+'>\' total record: ('+wins+'-'+losses+')*\n'+ outMsg;
+        let ratio = Math.round(wins/losses*100)/100;
+        outMsg = '*<@'+user+'>\'s total record: ('+wins+'-'+losses+')* _('+ratio+')_\n'+ outMsg;
         bot.reply(message, outMsg);
         return;
     }
 
-    if (users === 2) {
+    //they entered the command "List @TeamMember1 @TeamMember2"
+    //want to list all the games played by a certain team
+    if (words.length === 3 && isUser(words[1]) && isUser(words[2])) {
+        user1 = words[1].slice(2, -1);
+        user2 = words[2].slice(2, -1);
+
         let wins = 0;
         let losses = 0;
         let outMsg = '';
@@ -584,20 +587,68 @@ hears(['list'], 'direct_message', (bot, message) => {
         for (let index in records) {
             let game = records[index];
             let date = new Date(game.timestamp * 1000);
-            if (game.winner === user1 && game.loser === user2) {
+            let w1 = game.winners[0];
+            let w2 = game.winners[1];
+            let l1 = game.losers[0];
+            let l2 = game.losers[1];
+            let cups = game.cups;
+
+            if ((w1 === user1 && w2 === user2) || (w1 === user2 && w2 === user1)) { //they won the game as team
                 wins++;
-                outMsg += '<@'+user1+'> won *'+game['win-score']+'-'
-                    +game['lose-score'] + '* on '+formatDate(date)+'\n';
-            } else if (game.winner === user2 && game.loser === user1) {
+                outMsg += '*(W)* vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+            } else if ((l1 === user1 && l2 === user2) || (l1 === user2 && l2 === user1)) { //they lost
                 losses++;
-                outMsg += '<@'+user2+'> won *'+game['win-score']+'-'
-                    +game['lose-score'] + '* on '+formatDate(date)+'\n';;
+                outMsg += '*(L)* vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
             }
         }
-        outMsg = '*<@'+user1+'> vs <@'+user2+'> ('+wins+'-'+losses+')*\n' + outMsg;
+        let ratio = Math.round(wins/losses*100)/100;
+        outMsg = '*<@'+user1+'> with <@'+user2+'> ('+wins+'-'+losses+')* _('+ratio+')_\n' + outMsg;
         bot.reply(message, outMsg);
         return;
     }
+
+    //they entered the command "List @User1 vs @User2"
+    if (words.length === 4 && isUser(words[1]) && isUser(words[3]) && words[2].toUpperCase() === 'VS') {
+        user1 = words[1].slice(2, -1);
+        user2 = words[3].slice(2, -1);
+
+        let wins = 0;
+        let losses = 0;
+        let outMsg = '';
+        let records = JSON.parse(fs.readFileSync('json/records.json'));
+        for (let index in records) {
+            let game = records[index];
+            let date = new Date(game.timestamp * 1000);
+            let w1 = game.winners[0];
+            let w2 = game.winners[1];
+            let l1 = game.losers[0];
+            let l2 = game.losers[1];
+            let cups = game.cups;
+
+            if (w1 === user1 && (l1 === user2 || l2 === user2)) { //if user1 was a winner
+                outMsg += '*(W)* with <@'+w2+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                wins++;
+            } else if (w2 === user1 && (l1 === user2 || l2 === user2)) { //if user1 was a winner
+                outMsg += '*(W)* with <@'+w1+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                wins++;
+            } else if (l1 === user1 && (w1 === user2 || w2 === user2)) { //if user1 was a loser
+                outMsg += '*(L)* with <@'+l2+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                losses++
+            } else if (l2 === user1 && (w1 === user2 || w2 === user2)) { //if user1 was a loser
+                outMsg += '*(L)* with <@'+l1+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                losses++
+            }
+        }
+        let ratio = Math.round(wins/losses*100)/100;
+        outMsg = '*<@'+user1+'> vs <@'+user2+'> ('+wins+'-'+losses+')* _('+ratio+')_\n' + outMsg;
+        bot.reply(message, outMsg);
+        return;
+    }
+
+
+    //they didn't enter a valid command if the code made it here
+    messageUser(user, helpMsg, bot);
+    return;
 
 });
 
