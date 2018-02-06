@@ -153,6 +153,18 @@ hears('beat', 'direct_message', (bot, message) => {
             return;
         }
 
+        //a person cannot play themselves
+        if (w1 === l1 || w1 === l2 || w2 === l1 || w2 === l2) {
+            bot.reply(message, 'You can\'t play yourself!');
+            return;
+        }
+
+        //there must be 4 unique players in the game
+        if (w1 === w2 || l1 === l2) {
+            bot.reply(message, 'Invalid players! There was a duplicate person on one of the teams!');
+            return;
+        }
+
         // Once the formatting is correct, pull information
         let verb = ' beat ';
         let cups = parseInt(words[5]);
