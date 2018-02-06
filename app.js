@@ -273,8 +273,10 @@ hears(['leaderboards', 'leaderboard', 'leaders', 'scores', 'score'], 'direct_mes
     // Returns a sorted array of players, from highest elo to lowest
     function sortPlayers(playersObject) {
 
-        // Create an array of names sorted by ELO
-        return Object.keys(playersObject).sort(function (a, b) { return playersObject[b].elo - playersObject[a].elo; });
+        // Create an array of names sorted by win-loss ratio
+        return Object.keys(playersObject).sort(function (a, b) { 
+            return playersObject[b].won/playersObject[b].lost 
+                - playersObject[a].won/playersObject[a].lost; });
 
     }
 
@@ -285,50 +287,17 @@ hears(['leaderboards', 'leaderboard', 'leaders', 'scores', 'score'], 'direct_mes
         const playersObj = JSON.parse(fs.readFileSync('json/players.json'));
         const sortedPlayersList = sortPlayers(playersObj);
 
-        // Tierify them
-        const tierNames = ['God-Tier', 'A-Tier', 'Good', 'Silver', 'Bad', 'Trash'];
-        const tierNums = [950, 850, 750, 650, 550];
-
-        function getTier(playerName) {
-
-            const e = playersObj[playerName]['elo'];
-            let tier;
-
-            if (e > tierNums[0]) {
-                tier = tierNames[0];
-            } else if (e > tierNums[1]) {
-                tier = tierNames[1];
-            } else if (e > tierNums[2]) {
-                tier = tierNames[2];
-            } else if (e > tierNums[3]) {
-                tier = tierNames[3];
-            } else if (e > tierNums[4]) {
-                tier = tierNames[4];
-            } else {
-                tier = tierNames[5];
-            }
-
-            return tier;
-
-        }
-
         // Construct the message
-        let msg = '*Leaderboards:*\n';
-        let currentTier;
+        let msg = '*Leaderboards:*\n'
+            + '@User: *W-L* (W/L Ratio)\n';
         for (var i = 0; i < sortedPlayersList.length; i++) {
-
             let currentPlayer = sortedPlayersList[i];
-            let currentElo = Math.round(playersObj[currentPlayer]['elo']);
             let wins = playersObj[currentPlayer].won;
             let losses = playersObj[currentPlayer].lost;
+            let ratio = Math.round(wins/losses*100)/100;
 
-            if (getTier(sortedPlayersList[i]) !== currentTier) {
-                currentTier = getTier(sortedPlayersList[i]);
-                msg += '\n_' + currentTier + '_\n';
-            }
-
-            msg += '<@' + currentPlayer + '>:  *' + currentElo + '*  (' 
-                + wins + '-' + losses + ')\n';
+            msg += '<@' + currentPlayer + '>: *' 
+                + wins + '-' + losses + '* ('+ratio+')\n';
 
         }
 
