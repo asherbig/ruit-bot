@@ -1,201 +1,227 @@
 const fs = require('fs');
 
 module.exports = {
-    calcEloDelta: function (winner, loser, winnerScore, loserScore) {
+    
+    logScore: function (game) {
 
-        // Function definition to fetch ELOs from database
-        function fetchElo(userId){
+        function updatePlayers (players) {
 
-            // Read the data and pull their ELO
-            let playersObj = JSON.parse(fs.readFileSync('json/players.json'));
-            if (playersObj[userId]) {
-                return playersObj[userId].elo;
-            } else {
-                // If the user has no ELO, give them 50 as a baseline
-                return 750;
-            }
-        }
-
-        // Return k for each player
-        function fetchK(userId){
-
-            let playersObj = JSON.parse(fs.readFileSync('json/players.json'));
-            if (!(playersObj[userId])){
-                return 250;
-            } else {
-                let played = playersObj[userId].played;
-                if(played < 10){
-                    return 250;
-                } else if(played < 20){
-                    return 150;
+            const w1 = players.w1;
+            const w2 = players.w2;
+            const l1 = players.l1;
+            const l2 = players.l2;
+    
+            let notifications = [];
+            let playersFile = JSON.parse(fs.readFileSync('json/players.json'));
+    
+            //deal with the edge case that it's a new player
+            //winner 1
+            if (playersFile[w1]) {
+                playersFile[w1].played++;
+                playersFile[w1].won++;
+                if (playersFile[w1].streak === 'losing') {
+                    //they broke a losing streak
+                    notifications.push({
+                        type: 'streak break',
+                        user: w1,
+                        length: playersFile[w1].streak_length,
+                        message: '<@'+w2+'> just helped <@'+w1+'> break a '+playersFile[w1].streak_length+' game losing streak!'
+                    });
+                    playersFile[w1].streak = 'winning';
+                    playersFile[w1].streak_length = 1;
                 } else {
-                    return 50;
+                    //they were already on a winning streak
+                    playersFile[w1].streak_length++;
+                    notifications.push({
+                        type: 'streak continue',
+                        user: w1,
+                        length: playersFile[w1].streak_length,
+                        message: '<@'+w1+'> is on a '+playersFile[w1].streak_length+' game winning streak!'
+                    });
                 }
+            } else {
+                playersFile[w1] = {
+                    'played': 1,
+                    'won': 1,
+                    'lost': 0,
+                    'streak': 'winning',
+                    'streak_length': 1
+                };
             }
+            //winner 2
+            if (playersFile[w2]) {
+                playersFile[w2].played++;
+                playersFile[w2].won++;
+                if (playersFile[w2].streak === 'losing') {
+                    //they broke a losing streak
+                    notifications.push({
+                        type: 'streak break',
+                        user: w2,
+                        length: playersFile[w2].streak_length,
+                        message: '<@'+w1+'> just helped <@'+w2+'> break a '+playersFile[w2].streak_length+' game losing streak!'
+                    });
+                    playersFile[w2].streak = 'winning';
+                    playersFile[w2].streak_length = 1;
+                } else {
+                    //they were already on a winning streak
+                    playersFile[w2].streak_length++;
+                    notifications.push({
+                        type: 'streak continue',
+                        user: w2,
+                        length: playersFile[w2].streak_length,
+                        message: '<@'+w2+'> is on a '+playersFile[w2].streak_length+' game winning streak!'
+                    });
+                }
+            } else {
+                playersFile[w2] = {
+                    'played': 1,
+                    'won': 1,
+                    'lost': 0,
+                    'streak': 'winning',
+                    'streak_length': 1
+                };
+            }
+            //loser 1
+            if (playersFile[l1]) {
+                playersFile[l1].played++;
+                playersFile[l1].lost++;
+                if (playersFile[l1].streak === 'winning') {
+                    //they lost a winning streak
+                    notifications.push({
+                        type: 'streak break',
+                        user: l1,
+                        length: playersFile[l1].streak_length,
+                        message: '<@'+w1+'> and <@'+w2+'> ended <@'+l1+'>\'s '+playersFile[l1].streak_length+' game winning streak!'
+                    });
+                    playersFile[l1].streak = 'losing';
+                    playersFile[l1].streak_length = 1;
+                } else {
+                    //they were already on a losing streak
+                    playersFile[l1].streak_length++;
+                    notifications.push({
+                        type: 'streak continue',
+                        user: l1,
+                        length: playersFile[l1].streak_length,
+                        message: '<@'+l1+'> is on a '+playersFile[l1].streak_length+' game losing streak!'
+                    });
+                }
+            } else {
+                playersFile[l1] = {
+                    'played': 1,
+                    'won': 0,
+                    'lost': 1,
+                    'streak': 'losing',
+                    'streak_length': 1
+                };
+            }
+            //loser 2
+            if (playersFile[l2]) {
+                playersFile[l2].played++;
+                playersFile[l2].lost++;
+                if (playersFile[l2].streak === 'winning') {
+                    //they lost a winning streak
+                    notifications.push({
+                        type: 'streak break',
+                        user: l2,
+                        length: playersFile[l2].streak_length,
+                        message: '<@'+w1+'> and <@'+w2+'> ended <@'+l2+'>\'s '+playersFile[l2].streak_length+' game winning streak!'
+                    });
+                    playersFile[l2].streak = 'losing';
+                    playersFile[l2].streak_length = 1;
+                } else {
+                    //they were already on a losing streak
+                    playersFile[l2].streak_length++;
+                    notifications.push({
+                        type: 'streak continue',
+                        user: l2,
+                        length: playersFile[l2].streak_length,
+                        message: '<@'+l2+'> is on a '+playersFile[l2].streak_length+' game losing streak!'
+                    });
+                }
+            } else {
+                playersFile[l2] = {
+                    'played': 1,
+                    'won': 0,
+                    'lost': 1,
+                    'streak': 'losing',
+                    'streak_length': 1
+                };
+            }
+    
+            fs.writeFileSync('json/players.json', JSON.stringify(playersFile));
+            return notifications;
+
         }
-
-        let wElo = fetchElo(winner);
-        let lElo = fetchElo(loser);
-
-        // NEW ELO FORMULA HERE
-        const qConstant = 1000;  // The magnitude of this number is proportional to magnitude of ELO.
-        let qWinner = Math.pow(10, wElo / qConstant);
-        let qLoser = Math.pow(10, lElo / qConstant);
-
-        let winnerExpected = qWinner / (qWinner + qLoser);
-        let loserExpected = qLoser / (qWinner + qLoser);
-
-        let winnerActual = winnerScore / (winnerScore + loserScore);
-        let loserActual = loserScore / (winnerScore + loserScore);
-
-        let kWinner = fetchK(winner);
-        let kLoser = fetchK(loser);
-
-        let wEloDelta = kWinner * (winnerActual - winnerExpected);
-        let lEloDelta = kLoser * (loserActual - loserExpected);
-
-        // You should never lose ELO on a win
-        wElo += (wEloDelta < 0) ? 0 : wEloDelta;
-        lElo += lEloDelta;
-
-        // Create an object to return to updateElos
-        let playersObj = {};
-        playersObj.winner = { 'id': winner, 'elo': wElo };
-        playersObj.loser = { 'id': loser, 'elo': lElo };
-
-        return playersObj;
-
-    },
-
-    logScore: function (scoreObj) {
 
         // Read, push, write
         let records = JSON.parse(fs.readFileSync('json/records.json'));
-        records.push(scoreObj);
+        records.push(game);
         fs.writeFileSync('json/records.json', JSON.stringify(records));
-        return;
+
+        let players = {
+            'w1': game.winners[0],
+            'w2': game.winners[1],
+            'l1': game.losers[0],
+            'l2': game.losers[1]
+        };
+
+        //updatePlayers returns a list of potential notifications
+        return updatePlayers(players);
 
     },
 
-    //returns notable notifications
-    updateElos: function (playersObj) {
-
-        const winner = playersObj.winner.id;
-        const loser = playersObj.loser.id;
-        let notifications = [];
-
-        let playersFile = JSON.parse(fs.readFileSync('json/players.json'));
-
-        //console.log('playersFile at winner before', playersFile[winner]);
-        //console.log('playersFile at loser before', playersFile[loser]);
-        //deal with the edge case that it's a new player
-        if (playersFile[winner]) {
-            playersFile[winner].elo = playersObj.winner.elo;
-            playersFile[winner].played++;
-            playersFile[winner].won++;
-            if (playersFile[winner].streak === 'losing') {
-                console.log('winner was on a losing streak');
-                //they broke a losing streak
-                notifications.push({
-                    type: 'streak break',
-                    user: winner,
-                    length: playersFile[winner].streak_length,
-                    message: '<@'+winner+'> just broke a '+playersFile[winner].streak_length+' game long losing streak!'
-                });
-                playersFile[winner].streak = 'winning';
-                playersFile[winner].streak_length = 1;
-            } else {
-                console.log('winner extended win streak');
-                //they were already on a winning streak
-                playersFile[winner].streak_length++;
-                notifications.push({
-                    type: 'streak continue',
-                    user: winner,
-                    length: playersFile[winner].streak_length,
-                    message: '<@'+winner+'> is on a '+playersFile[winner].streak_length+' game winning streak!'
-                });
-            }
-        } else {
-            console.log('creating new player with win streak');
-            playersFile[winner] = {
-                'elo': playersObj.winner.elo,
-                'played': 1,
-                'won': 1,
-                'lost': 0,
-                'streak': 'winning',
-                'streak_length': 1
-            };
-        }
-        if (playersFile[loser]) {
-            playersFile[loser].elo = playersObj.loser.elo;
-            playersFile[loser].played++;
-            playersFile[loser].lost++;
-            if (playersFile[loser].streak === 'winning') {
-                console.log('loser lost a win streak');
-                //they broke a winning streak
-                notifications.push({
-                    type: 'streak break',
-                    user: loser,
-                    length: playersFile[loser].streak_length,
-                    message: '<@'+loser+'> just lost a '+playersFile[loser].streak_length+' game long winning streak!'
-                });
-                playersFile[loser].streak = 'losing';
-                playersFile[loser].streak_length = 1;
-            } else {
-                console.log('loser extended a losing streak');
-                //they were already on a losing streak
-                playersFile[loser].streak_length++;
-                notifications.push({
-                    type: 'streak continue',
-                    user: loser,
-                    length: playersFile[loser].streak_length,
-                    message: '<@'+loser+'> is on a '+playersFile[loser].streak_length+' game losing streak!'
-                });
-            }
-        } else {
-            console.log('creating new player with losing streak');
-            playersFile[loser] = {
-                'elo': playersObj.loser.elo,
-                'played': 1,
-                'won': 0,
-                'lost': 1,
-                'streak': 'losing',
-                'streak_length': 1
-            };
-        }
-        //console.log('playersFile at winner after', playersFile[winner]);
-        //console.log('playersFile at loser after', playersFile[loser]);
-        fs.writeFileSync('json/players.json', JSON.stringify(playersFile));
-        return notifications;
-    },
-
-    deleteGame: function (timestamp) {
+    deny: function (denyObj) {
 
         // Read, iterate, delete, write
         let records = JSON.parse(fs.readFileSync('json/records.json'));
+        let result = 'error';
+        let timestamp = denyObj.timestamp;
+        let denier = denyObj.denier;
+        console.log('TIMESTAMP IN DENY FUNCTION', timestamp);
         for (index in records) {
             if (timestamp === records[index].timestamp) {
                 let game = records[index];
                 //update the stats in the players.json file too
-                let winner = game.winner;
-                let loser = game.loser;
-                let playersFile = JSON.parse(fs.readFileSync('json/players.json'));
 
-                playersFile[winner].played--;
-                playersFile[winner].won--;
-                playersFile[loser].played--;
-                playersFile[loser].lost--;
+                //if the game hasn't been denied by anyone else yet
+                if (game.denies === 0) {
+                    records[index].denies++;
+                    result = 'denied';
+                    records[index].deniers.push(denier);
+                //the game has been denied by 1 other person, 'delete' the game
+                } else if (game.denies === 1) {
+                    if (game.deniers[0] === denier) {
+                        result = 'duplicate';
+                        return result;
+                    }
+                    records[index].deniers.push(denier);
+                    records[index].denies++;
+                    result = 'deleted';
+                    let w1 = game.winners[0];
+                    let w2 = game.winners[1];
+                    let l1 = game.losers[0];
+                    let l2 = game.losers[1];
 
-                //TODO: update elo when game is deleted
+                    let playersFile = JSON.parse(fs.readFileSync('json/players.json'));
 
-                fs.writeFileSync('json/players.json', JSON.stringify(playersFile));
+                    playersFile[w1].played--;
+                    playersFile[w1].won--;
+                    playersFile[w2].played--;
+                    playersFile[w2].won--;
+                    playersFile[l1].played--;
+                    playersFile[l1].lost--;
+                    playersFile[l2].played--;
+                    playersFile[l2].lost--;
 
-                records.splice(index, 1);
+                    fs.writeFileSync('json/players.json', JSON.stringify(playersFile));
+                //game is denied by a third person (max # of people who can deny)
+                } else if (game.denies === 2) {
+                    result = 'error'
+                }
                 fs.writeFileSync('json/records.json', JSON.stringify(records));
-                return true;
             }
         }
-        return false;
+        return result;
 
     }
 };
