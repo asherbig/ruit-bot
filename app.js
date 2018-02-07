@@ -481,11 +481,11 @@ function messageUser(user, message, bot = null) {
 
 hears(['help'], 'direct_message,direct_mention,mention', (bot, message) => {
 
-    const helpMsg = 'All commands are done through the ruitbot *direct messages*.\nTo record a game:\n '
+    const helpMsg = 'All commands are done through the ruitbot *direct messages*.\nTo record a game:\n'
         + '*@Winner1 @Winner2 beat @Loser1 @Loser2 [cups won by]*\n'
         + 'To check leaderboards:\n'
         + 'Type some variant of *scores* or *leaderboards*\n'
-        + 'List all games played by everyone:\n*List all*'
+        + 'List all games played by everyone:\n*List all*\n'
         + 'List all games played by a user:\n*List @User*\n'
         + 'List all games played by a certain team:\n*List @User1 @User2*\n'
         + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*';
@@ -495,11 +495,11 @@ hears(['help'], 'direct_message,direct_mention,mention', (bot, message) => {
 });
 
 function pollUsers(members) {
-    const helpMsg = 'All commands are done through the ruitbot *direct messages*.\nTo record a game:\n '
+    const helpMsg = 'All commands are done through the ruitbot *direct messages*.\nTo record a game:\n'
         + '*@Winner1 @Winner2 beat @Loser1 @Loser2 [cups won by]*\n'
         + 'To check leaderboards:\n'
         + 'Type some variant of *scores* or *leaderboards*\n'
-        + 'List all games played by everyone:\n*List all*'
+        + 'List all games played by everyone:\n*List all*\n'
         + 'List all games played by a user:\n*List @User*\n'
         + 'List all games played by a certain team:\n*List @User1 @User2*\n'
         + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*';
@@ -536,7 +536,7 @@ hears(['list'], 'direct_message', (bot, message) => {
     let user2;
 
     let helpMsg = 'Incorrect command format!\n'
-        + 'List all games played by everyone:\n*List all*'
+        + 'List all games played by everyone:\n*List all*\n'
         + 'List all games played by a user:\n*List @User*\n'
         + 'List all games played by a certain team:\n*List @TeamMember1 @TeamMember2*\n'
         + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*';

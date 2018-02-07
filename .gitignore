@@ -7,3 +7,4 @@ js/prod\ credentials.js
 json/players.json
 json/records.json
 users_config.json
+json/guest_users.json
