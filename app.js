@@ -730,3 +730,33 @@ function getRatio(wins, losses) {
         return Math.round(wins/losses*100)/100;
     }
 }
+
+hears(['broadcast'], 'direct_message', (bot, message) => {
+    //broadcast a message if a password is accepted
+    const { user, text } = message;
+
+    let words = text.split(' ');
+    let helpMsg = 'Command format:\n'
+        + 'Broadcast [password] [message]'; 
+
+    if (words[0].toUpperCase() !== 'BROADCAST') {
+        return;
+    }
+
+    //TODO
+    //dummy password. Change this to an untracked config file in github
+    if (words.length >= 2 && words[1] === 'lodgePass') {
+        words.splice(0,2);
+        let msg = words.join(' ');
+        //console.log('Sending message:', msg);
+        //TODO change this to be a direct message to everyone
+        bot.say({
+            text: msg,
+            channel: 'C8UALLR2P' // bros_and_pledges channel
+            //NOTE: This channel ID may change every semester.
+            //TODO: Set up a check to find the bros_and_pledges channel
+            //channel: 'G7VC8LPP1' // bot testing channel
+        });
+    }
+
+});
