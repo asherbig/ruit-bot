@@ -16,7 +16,7 @@ rule.minute = 0;
 
 //TODO change to work with new game format
 var j = schedule.scheduleJob(rule, function() {
-    let games = getLastWeek(); //TODO edit function
+    let games = getLastWeek();
     console.log(games);
     outMsg = '';
     for (let index in games) {
@@ -34,11 +34,11 @@ var j = schedule.scheduleJob(rule, function() {
 
         //formatting a single game for the summary message
         if (cups === 1) {
-            outMsg = outMsg + '<@'+g.winners[0]+'> and <@'+g.winners[1]+'>' + verb + '<@'
-                + g.losers[0] + '> and <@'+ g.losers[1]+'> by' + cups + ' cup\n';
+            outMsg = outMsg + '*<@'+g.winners[0]+'> and <@'+g.winners[1]+'>*' + verb + '<@'
+                + g.losers[0] + '> and <@'+ g.losers[1]+'> by ' + cups + ' cup\n';
         } else {
-            outMsg = outMsg + '<@'+g.winners[0]+'> and <@'+g.winners[1]+'>' + verb + '<@'
-                + g.losers[0] + '> and <@'+ g.losers[1]+'> by' + cups + ' cups\n';
+            outMsg = outMsg + '*<@'+g.winners[0]+'> and <@'+g.winners[1]+'>*' + verb + '<@'
+                + g.losers[0] + '> and <@'+ g.losers[1]+'> by ' + cups + ' cups\n';
         }
     }
     if (games.length === 1) {
@@ -53,10 +53,10 @@ var j = schedule.scheduleJob(rule, function() {
     //UNCOMMENT THIS BEFORE PUSHING TO PRODUCTION
     bot.say({
             text: outMsg,
-            //channel: 'C8UALLR2P' // bros_and_pledges channel
+            channel: 'C8UALLR2P' // bros_and_pledges channel
             //NOTE: This channel ID may change every semester.
             //TODO: Set up a check to find the bros_and_pledges channel
-            channel: 'G7VC8LPP1' // bot testing channel
+            //channel: 'G7VC8LPP1' // bot testing channel
         });
 
 });
@@ -213,6 +213,18 @@ hears('beat', 'direct_message', (bot, message) => {
         let outMsgWinner1 = 'You and <@'+w2+'>'+verb+'<@'+l1+'> and <@'+l2+'> by '+cups+' '+cupWord;
         let outMsgWinner2 = 'You and <@'+w1+'>'+verb+'<@'+l1+'> and <@'+l2+'> by '+cups+' '+cupWord;
 
+        //possibly message the bros_and_pledges group?
+        if (cups === 10) {
+            let outMsg = '<@'+w1+'> and <@'+w2+'> just skunked <@'+l1+'> and <@'+l2+'>! You know what that means!';
+            bot.say({
+                text: outMsg,
+                channel: 'C8UALLR2P' // bros_and_pledges channel
+                //NOTE: This channel ID may change every semester.
+                //TODO: Set up a check to find the bros_and_pledges channel
+                //channel: 'G7VC8LPP1' // bot testing channel
+            });
+        }
+
         // Send the base message to the logger of the game
         //all other messages must have the option to deny the game
         if (w1 === user) {
@@ -245,8 +257,8 @@ hears('beat', 'direct_message', (bot, message) => {
                     console.log('printing streak continue messages');
                     bot2.say({
                         text: msgs[i].message,
-                        //channel: 'C8UALLR2P' // bros_and_pledges channel
-                        channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
+                        channel: 'C8UALLR2P' // bros_and_pledges channel
+                        //channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
                     });
                 }
             } else if (msgs[i].type === 'streak break') {
@@ -254,8 +266,8 @@ hears('beat', 'direct_message', (bot, message) => {
                     console.log('printing streak break messages');
                     bot2.say({
                         text: msgs[i].message,
-                        //channel: 'C8UALLR2P' // bros_and_pledges channel
-                        channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
+                        channel: 'C8UALLR2P' // bros_and_pledges channel
+                        //channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
                     });
                 }
             }
@@ -294,7 +306,7 @@ hears(['leaderboards', 'leaderboard', 'leaders', 'scores', 'score'], 'direct_mes
             let currentPlayer = sortedPlayersList[i];
             let wins = playersObj[currentPlayer].won;
             let losses = playersObj[currentPlayer].lost;
-            let ratio = Math.round(wins/losses*100)/100;
+            let ratio = getRatio(wins, losses);
 
             msg += '<@' + currentPlayer + '>: *' 
                 + wins + '-' + losses + '* ('+ratio+')\n';
@@ -329,10 +341,6 @@ controller.on('reaction_added', function (bot, message) {
 
     let ts = item.ts;
     let channelID = item.channel;
-
-    // if (reaction !== 'x') {
-    //     return;
-    // }
 
     //get more info about what was reacted on
     apiFunctions.conversations.history({
@@ -424,7 +432,7 @@ function denyGame(denier, resp, bot) {
             liarMsg = 'The game you played against <@'+l1+'> and <@'+l2+'>'
                 + ' on <!date^' + timestamp + '^{date_short} at {time}| '
                 + 'February 18th, 2014 at 6:39 AM PST>'
-                + ' was deleted by <@'+denier+'> If one more person denies this game, it will be deleted.';
+                + ' was denied by <@'+denier+'> If one more person denies this game, it will be deleted.';
         }
         messageUser(liar, liarMsg, bot);
 
@@ -473,11 +481,12 @@ function messageUser(user, message, bot = null) {
 
 hears(['help'], 'direct_message,direct_mention,mention', (bot, message) => {
 
-    const helpMsg = 'All commands are done through the ruitbot Direct Messages.\nTo record a game:\n '
-        + '"@Winner1 @Winner2 beat @Lose1 @Loser2 [cups won by]"\n'
+    const helpMsg = 'All commands are done through the ruitbot *direct messages*.\nTo record a game:\n '
+        + '*@Winner1 @Winner2 beat @Loser1 @Loser2 [cups won by]*\n'
         + 'To check leaderboards:\n'
-        + 'Type some variant of "scores" or "leaderboards"'
-        + 'List all games played by a user:\n*List @Opponent*\n'
+        + 'Type some variant of *scores* or *leaderboards*\n'
+        + 'List all games played by everyone:\n*List all*'
+        + 'List all games played by a user:\n*List @User*\n'
         + 'List all games played by a certain team:\n*List @User1 @User2*\n'
         + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*';
     bot.reply(message, helpMsg);
@@ -486,10 +495,11 @@ hears(['help'], 'direct_message,direct_mention,mention', (bot, message) => {
 });
 
 function pollUsers(members) {
-    const helpMsg = 'All commands are done through the ruitbot Direct Messages.\nTo record a game:\n '
-        + '"@Winner1 @Winner2 beat @Lose1 @Loser2 [cups won by]"\n'
+    const helpMsg = 'All commands are done through the ruitbot *direct messages*.\nTo record a game:\n '
+        + '*@Winner1 @Winner2 beat @Loser1 @Loser2 [cups won by]*\n'
         + 'To check leaderboards:\n'
-        + 'Type some variant of "scores" or "leaderboards"'
+        + 'Type some variant of *scores* or *leaderboards*\n'
+        + 'List all games played by everyone:\n*List all*'
         + 'List all games played by a user:\n*List @User*\n'
         + 'List all games played by a certain team:\n*List @User1 @User2*\n'
         + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*';
@@ -526,9 +536,11 @@ hears(['list'], 'direct_message', (bot, message) => {
     let user2;
 
     let helpMsg = 'Incorrect command format!\n'
+        + 'List all games played by everyone:\n*List all*'
         + 'List all games played by a user:\n*List @User*\n'
         + 'List all games played by a certain team:\n*List @TeamMember1 @TeamMember2*\n'
-        + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*'
+        + 'List all games where two specific people play against each other:\n*List @User1 vs @User2*';
+
     if (words[0].toUpperCase() !== 'LIST') {
         return;
     }
@@ -541,10 +553,11 @@ hears(['list'], 'direct_message', (bot, message) => {
     //this means they entered List @User
     if (words.length === 2 && isUser(words[1])) {
         //if at least 2 parameters and correct format so far, get user
-        user = words[1].slice(2, -1);
+        user1 = words[1].slice(2, -1);
         let records = JSON.parse(fs.readFileSync('json/records.json'));
         let wins = 0;
         let losses = 0;
+        let outMsg = '';
 
         for (let index in records) {
             let game = records[index];
@@ -554,22 +567,62 @@ hears(['list'], 'direct_message', (bot, message) => {
             let l1 = game.losers[0];
             let l2 = game.losers[1];
             let cups = game.cups;
-            if (w1 === user) { //if the user was a winner
+            if (w1 === user1) { //if the user was a winner
                 outMsg += '*(W)* with <@'+w2+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
                 wins++;
-            } else if (w2 === user) { //if the user was a winner
+            } else if (w2 === user1) { //if the user was a winner
                 outMsg += '*(W)* with <@'+w1+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
                 wins++;
-            } else if (l1 === user) { //if the user was a loser
+            } else if (l1 === user1) { //if the user was a loser
                 outMsg += '*(L)* with <@'+l2+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
                 losses++
-            } else if (l2 === user){ //if the user was a loser
+            } else if (l2 === user1){ //if the user was a loser
                 outMsg += '*(L)* with <@'+l1+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
                 losses++
             }
         }
-        let ratio = Math.round(wins/losses*100)/100;
-        outMsg = '*<@'+user+'>\'s total record: ('+wins+'-'+losses+')* _('+ratio+')_\n'+ outMsg;
+        let ratio = getRatio(wins, losses);
+        outMsg = '*<@'+user1+'>\'s total record: ('+wins+'-'+losses+')* _('+ratio+')_\n'+ outMsg;
+        bot.reply(message, outMsg);
+        return;
+    }
+
+    //command entered: "List all"
+    if (words.length === 2 && words[1].toUpperCase() === 'ALL') {
+
+        outMsg = '';
+        let numGames = 0;
+        let games = JSON.parse(fs.readFileSync('json/records.json'));
+
+        for (let index in games) {
+            
+            let game = games[index];
+            let cups = game.cups;
+            let date = new Date(game.timestamp * 1000);
+            let w1 = game.winners[0];
+            let w2 = game.winners[1];
+            let l1 = game.losers[0];
+            let l2 = game.losers[1];
+
+            let verb = ' beat ';
+            //get the verb
+            if (cups == 10) {
+                verb = ' skunked ';
+            } else if (cups > 5) {
+                verb = ' destroyed ';
+            }
+    
+            //formatting a single game for the summary message
+            if (cups === 1) {
+                outMsg = outMsg + '*<@'+w1+'> and <@'+w2+'>*' + verb + '<@'
+                    + l1 + '> and <@'+ l2+ '> by ' + cups + ' cup on '+formatDate(date)+'\n';
+            } else {
+                outMsg = outMsg + '*<@'+w1+'> and <@'+w2+'>*' + verb + '<@'
+                    + l1 + '> and <@'+ l2 +'> by ' + cups + ' cups on '+formatDate(date)+'\n';
+            }
+            numGames++;
+        }
+        outMsg = '*'+numGames+' games logged since last reset:*\n' + outMsg;
         bot.reply(message, outMsg);
         return;
     }
@@ -601,7 +654,7 @@ hears(['list'], 'direct_message', (bot, message) => {
                 outMsg += '*(L)* vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
             }
         }
-        let ratio = Math.round(wins/losses*100)/100;
+        let ratio = getRatio(wins, losses);
         outMsg = '*<@'+user1+'> with <@'+user2+'> ('+wins+'-'+losses+')* _('+ratio+')_\n' + outMsg;
         bot.reply(message, outMsg);
         return;
@@ -639,7 +692,7 @@ hears(['list'], 'direct_message', (bot, message) => {
                 losses++
             }
         }
-        let ratio = Math.round(wins/losses*100)/100;
+        let ratio = getRatio(wins, losses);
         outMsg = '*<@'+user1+'> vs <@'+user2+'> ('+wins+'-'+losses+')* _('+ratio+')_\n' + outMsg;
         bot.reply(message, outMsg);
         return;
@@ -668,4 +721,12 @@ function getLastWeek() {
 
 function isUser(word) {
     return (/<@([A-Z0-9]{9})>/.test(word));
+}
+
+function getRatio(wins, losses) {
+    if (losses === 0) {
+        return Math.round(wins/1*100)/100;
+    } else {
+        return Math.round(wins/losses*100)/100;
+    }
 }

@@ -188,12 +188,14 @@ module.exports = {
                     records[index].denies++;
                     result = 'denied';
                     records[index].deniers.push(denier);
+                    fs.writeFileSync('json/records.json', JSON.stringify(records));
                 //the game has been denied by 1 other person, 'delete' the game
                 } else if (game.denies === 1) {
                     if (game.deniers[0] === denier) {
                         result = 'duplicate';
                         return result;
                     }
+
                     records[index].deniers.push(denier);
                     records[index].denies++;
                     result = 'deleted';
@@ -201,6 +203,11 @@ module.exports = {
                     let w2 = game.winners[1];
                     let l1 = game.losers[0];
                     let l2 = game.losers[1];
+
+                    //actually deletes the game
+                    records.splice(index, 1);
+
+                    fs.writeFileSync('json/records.json', JSON.stringify(records));
 
                     let playersFile = JSON.parse(fs.readFileSync('json/players.json'));
 
@@ -218,7 +225,6 @@ module.exports = {
                 } else if (game.denies === 2) {
                     result = 'error'
                 }
-                fs.writeFileSync('json/records.json', JSON.stringify(records));
             }
         }
         return result;
