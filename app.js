@@ -555,6 +555,11 @@ hears(['help'], 'direct_message,direct_mention,mention', (bot, message) => {
 
     const helpMsg = 'All commands are done through the ruitbot *direct messages*.\nTo record a game:\n'
         + '*@Winner1 @Winner2 beat @Loser1 @Loser2 [cups won by]*\n'
+        + 'To record a game with someone _not_ in the slack:\n'
+        + '*@SlackUser Guest beat Guest Guest [cups won by]*\n'
+        + 'To register a person who isn\'t in the slack:\n'
+        + '*Add [Name]*\n'
+        + '(For any command with a guest instead of a slack user, just type their name without the "@")\n'
         + 'To check leaderboards:\n'
         + 'Type some variant of *scores* or *leaderboards*\n'
         + 'List all games played by everyone:\n*List all*\n'
@@ -569,6 +574,11 @@ hears(['help'], 'direct_message,direct_mention,mention', (bot, message) => {
 function pollUsers(members) {
     const helpMsg = 'All commands are done through the ruitbot *direct messages*.\nTo record a game:\n'
         + '*@Winner1 @Winner2 beat @Loser1 @Loser2 [cups won by]*\n'
+        + 'To record a game with someone _not_ in the slack:\n'
+        + '*@SlackUser Guest beat Guest Guest [cups won by]*\n'
+        + 'To register a person who isn\'t in the slack:\n'
+        + '*Add [Name]*\n'
+        + '(For any command with a guest instead of a slack user, just type their name without the "@")\n'
         + 'To check leaderboards:\n'
         + 'Type some variant of *scores* or *leaderboards*\n'
         + 'List all games played by everyone:\n*List all*\n'
