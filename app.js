@@ -557,7 +557,9 @@ hears(['help'], 'direct_message,direct_mention,mention', (bot, message) => {
         + '*@Winner1 @Winner2 beat @Loser1 @Loser2 [cups won by]*\n'
         + 'To record a game with someone _not_ in the slack:\n'
         + '*@SlackUser Guest beat Guest Guest [cups won by]*\n'
-        + 'To register a person who isn\'t in the slack:\n'
+        + 'To see all the added guests:\n'
+        + '*Guests* or *Guest*\n'
+        + 'To register a person who isn\'t in the slack or the current guest list:\n'
         + '*Add [Name]*\n'
         + '(For any command with a guest instead of a slack user, just type their name without the "@")\n'
         + 'To check leaderboards:\n'
@@ -576,7 +578,9 @@ function pollUsers(members) {
         + '*@Winner1 @Winner2 beat @Loser1 @Loser2 [cups won by]*\n'
         + 'To record a game with someone _not_ in the slack:\n'
         + '*@SlackUser Guest beat Guest Guest [cups won by]*\n'
-        + 'To register a person who isn\'t in the slack:\n'
+        + 'To see all the added guests:\n'
+        + '*Guests* or *Guest*\n'
+        + 'To register a person who isn\'t in the slack or the current guest list:\n'
         + '*Add [Name]*\n'
         + '(For any command with a guest instead of a slack user, just type their name without the "@")\n'
         + 'To check leaderboards:\n'
@@ -793,6 +797,10 @@ hears(['add'], 'direct_message', (bot, message) => {
     const { user, text } = message;
     let words = text.split(' ');
 
+    if (words[0].toUpperCase() !== 'ADD') {
+        return;
+    }
+
     //they entered the right command
     //and the user they want to add isn't in the system yet
     if (words[0].toUpperCase() === 'ADD' && words.length === 2 && !isUser(words[1])) {
@@ -806,6 +814,29 @@ hears(['add'], 'direct_message', (bot, message) => {
     } else {
         bot.reply(message, 'Incorrect format! Add command format:\nAdd [new guest]');
     }
+
+});
+
+hears(['guests', 'guest'], 'direct_message', (bot, message) => {
+
+    const { user, text } = message;
+    let words = text.split(' ');
+
+    if (words[0].toUpperCase() !== 'GUESTS' && words[0].toUpperCase() !== 'GUEST') {
+        return;
+    }
+
+    if (words.length !== 1) {
+        return;
+    }
+
+    let outMsg = '';
+    for (let i in guest_users) {
+        outMsg += guest_users[i] + '\n';
+    }
+    outMsg = '*Registered Guests:*\n' + outMsg;
+
+    bot.reply(message, outMsg);
 
 });
 
