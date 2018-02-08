@@ -14,7 +14,6 @@ rule.dayOfWeek = 1; //every Monday
 rule.hour = 12; //this will do a message every week, Monday at noon
 rule.minute = 0;
 
-//TODO change to work with new game format
 var j = schedule.scheduleJob(rule, function() {
     let games = getLastWeek();
     console.log(games);
@@ -31,14 +30,18 @@ var j = schedule.scheduleJob(rule, function() {
         } else if (cups > 5) {
             verb = ' destroyed ';
         }
+        let w1Name = formatUserForMessage(g.winners[0]);
+        let w2Name = formatUserForMessage(g.winners[1]);
+        let l1Name = formatUserForMessage(g.losers[0]);
+        let l2Name = formatUserForMessage(g.losers[0]);
 
         //formatting a single game for the summary message
         if (cups === 1) {
-            outMsg = outMsg + '*<@'+g.winners[0]+'> and <@'+g.winners[1]+'>*' + verb + '<@'
-                + g.losers[0] + '> and <@'+ g.losers[1]+'> by ' + cups + ' cup\n';
+            outMsg = outMsg + '*'+w1Name+' and '+w2Name+'*' + verb + l1Name
+                + ' and '+l2Name+' by ' + cups + ' cup\n';
         } else {
-            outMsg = outMsg + '*<@'+g.winners[0]+'> and <@'+g.winners[1]+'>*' + verb + '<@'
-                + g.losers[0] + '> and <@'+ g.losers[1]+'> by ' + cups + ' cups\n';
+            outMsg = outMsg + '*'+w1Name+' and '+w2Name+'*' + verb + l1Name
+                + ' and '+l2Name+' by ' + cups + ' cups\n';
         }
     }
     if (games.length === 1) {
@@ -71,10 +74,13 @@ var bot = controller.spawn({
     token: credentials.bot_oauth_token
 });
 var bot2 = bot;
+let guest_users = JSON.parse(fs.readFileSync('json/guest_users.json'));
 
 bot.startRTM(function (err, bot, payload) {
     if (err) console.log('RTM START ERROR', err);
     apiFunctions = bot.api;
+
+    reCalculatePlayers();
 
     //get all the users in the slack channel
     bot.api.users.list({}, function(err,resp) {
@@ -104,9 +110,41 @@ bot.startRTM(function (err, bot, payload) {
     });
 });
 
-/* Action starts here */
-
 const { hears } = controller;
+
+/* Action starts here */
+//This needs to be first to make sure broadcast is the
+// favored keyword. Could also solve this issue
+// by having a function for broadcasting messages
+hears(['broadcast'], 'direct_message', (bot, message) => {
+    //broadcast a message if a password is accepted
+    const { user, text } = message;
+
+    let words = text.split(' ');
+    let helpMsg = 'Command format:\n'
+        + 'Broadcast [password] [message]'; 
+
+    if (words[0].toUpperCase() !== 'BROADCAST') {
+        return;
+    }
+
+    //TODO
+    //dummy password. Change this to an untracked config file in github
+    if (words.length >= 2 && words[1] === 'lodgePass') {
+        words.splice(0,2);
+        let msg = words.join(' ');
+        //console.log('Sending message:', msg);
+        //TODO change this to be a direct message to everyone
+        bot.say({
+            text: msg,
+            channel: 'C8UALLR2P' // bros_and_pledges channel
+            //NOTE: This channel ID may change every semester.
+            //TODO: Set up a check to find the bros_and_pledges channel
+            //channel: 'G7VC8LPP1' // bot testing channel
+        });
+    }
+
+});
 
 /* ---- MAIN FUNCTIONALITY ---- */
 
@@ -142,10 +180,10 @@ hears('beat', 'direct_message', (bot, message) => {
             return;
         }
 
-        let w1 = words[0].slice(2, -1); // winner 1
-        let w2 = words[1].slice(2, -1); // winner 2
-        let l1 = words[3].slice(2, -1); // loser 1
-        let l2 = words[4].slice(2, -1); // loser 2
+        let w1 = formatUserForLogging(words[0]); // winner 1
+        let w2 = formatUserForLogging(words[1]); // winner 2
+        let l1 = formatUserForLogging(words[3]); // loser 1
+        let l2 = formatUserForLogging(words[4]); // loser 2
 
         //person logging the game must be one of the 4 players
         if (!(w1 === user) && !(w2 === user) && !(l1 === user) && !(l2 === user)) {
@@ -196,7 +234,7 @@ hears('beat', 'direct_message', (bot, message) => {
         };
 
         // Log scores and new ELOs
-        let msgs = logging.logScore(game);
+        let msgs = logging.logScore(game, true);
 
         //Commented out ELO related calculations. No current plans to implement
         // let newElos = logging.calcEloDelta(scoreObj['winner'], scoreObj['loser'], scoreObj['win-score'], scoreObj['lose-score']);
@@ -208,14 +246,19 @@ hears('beat', 'direct_message', (bot, message) => {
             cupWord = 'cup';
         }
 
-        let outMsgLoser1 = '<@'+w1+'> and <@'+w2+'>'+verb+'you and <@'+l2+'> by '+cups+' '+cupWord;
-        let outMsgLoser2 = '<@'+w1+'> and <@'+w2+'>'+verb+'you and <@'+l1+'> by '+cups+' '+cupWord;
-        let outMsgWinner1 = 'You and <@'+w2+'>'+verb+'<@'+l1+'> and <@'+l2+'> by '+cups+' '+cupWord;
-        let outMsgWinner2 = 'You and <@'+w1+'>'+verb+'<@'+l1+'> and <@'+l2+'> by '+cups+' '+cupWord;
+        let w1Name = formatUserForMessage(w1);
+        let w2Name = formatUserForMessage(w2);
+        let l1Name = formatUserForMessage(l1);
+        let l2Name = formatUserForMessage(l2);
 
-        //possibly message the bros_and_pledges group?
+        let outMsgLoser1 = ''+w1Name+' and '+w2Name+verb+'you and '+l2Name+' by '+cups+' '+cupWord;
+        let outMsgLoser2 = ''+w1Name+' and '+w2Name+verb+'you and '+l1Name+' by '+cups+' '+cupWord;
+        let outMsgWinner1 = 'You and '+w2Name+verb+l1Name+' and '+l2Name+' by '+cups+' '+cupWord;
+        let outMsgWinner2 = 'You and '+w1Name+verb+l1Name+' and '+l2Name+' by '+cups+' '+cupWord;
+
+        //possibly message the bros_and_pledges group about a skunk?
         if (cups === 10) {
-            let outMsg = '<@'+w1+'> and <@'+w2+'> just skunked <@'+l1+'> and <@'+l2+'>! You know what that means!';
+            let outMsg = ''+w1Name+' and '+w2Name+' just skunked '+l1Name+' and '+l2Name+'!!!';
             bot.say({
                 text: outMsg,
                 channel: 'C8UALLR2P' // bros_and_pledges channel
@@ -252,22 +295,47 @@ hears('beat', 'direct_message', (bot, message) => {
         //decide which notifications to print
         for (let i in msgs) {
             console.log('message',i,':', msgs[i]);
-            if (msgs[i].type === 'streak continue') {
-                if (msgs[i].length % 5 === 0) {
-                    console.log('printing streak continue messages');
+            let msg = '';
+            if (msgs[i].type === 'streak break') {
+                if (msgs[i].slength >= 5) {
+                    if (msgs[i].subtype === 'losing') {
+                        let l1Name = formatUserForMessage(msgs[i].opponents[0]);
+                        let l2Name = formatUserForMessage(msgs[i].opponents[1]);
+                        let w1Name = formatUserForMessage(msgs[i].user);
+                        let w2Name = formatUserForMessage(msgs[i].teammate);
+                        msg = w2Name+' just helped break '+w1Name+'\'s '+msgs[i].slength+' game losing streak!';
+                    } else if (msgs[i].subtype === 'winning') {
+                        let w1Name = formatUserForMessage(msgs[i].opponents[0]);
+                        let w2Name = formatUserForMessage(msgs[i].opponents[1]);
+                        let l1Name = formatUserForMessage(msgs[i].user);
+                        let l2Name = formatUserForMessage(msgs[i].teammate);
+                        msg = w1Name+' and '+w2Name+' ended '+l1Name+'\'s '+msgs[i].slength+' game winning streak!';
+                    }
                     bot2.say({
-                        text: msgs[i].message,
-                        channel: 'C8UALLR2P' // bros_and_pledges channel
-                        //channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
+                        text: msg,
+                        //channel: 'C8UALLR2P' // bros_and_pledges channel
+                        channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
                     });
                 }
-            } else if (msgs[i].type === 'streak break') {
-                if (msgs[i].length >= 5) {
-                    console.log('printing streak break messages');
+            } else if (msgs[i].type === 'streak continue') {
+                if (msgs[i].slength % 5 === 0) {
+                    if (msgs[i].subtype === 'losing') {
+                        let w1Name = formatUserForMessage(msgs[i].opponents[0]);
+                        let w2Name = formatUserForMessage(msgs[i].opponents[1]);
+                        let l1Name = formatUserForMessage(msgs[i].user);
+                        let l2Name = formatUserForMessage(msgs[i].teammate);
+                        msg = l1Name+' is on a '+msgs[i].slength+' game losing streak!';
+                    } else if (msgs[i].subtype === 'winning') {
+                        let l1Name = formatUserForMessage(msgs[i].opponents[0]);
+                        let l2Name = formatUserForMessage(msgs[i].opponents[1]);
+                        let w1Name = formatUserForMessage(msgs[i].user);
+                        let w2Name = formatUserForMessage(msgs[i].teammate);
+                        msg = w1Name+' is on a '+msgs[i].slength+' game winning streak!';
+                    }
                     bot2.say({
-                        text: msgs[i].message,
-                        channel: 'C8UALLR2P' // bros_and_pledges channel
-                        //channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
+                        text: msg,
+                        //channel: 'C8UALLR2P' // bros_and_pledges channel
+                        channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
                     });
                 }
             }
@@ -307,9 +375,9 @@ hears(['leaderboards', 'leaderboard', 'leaders', 'scores', 'score'], 'direct_mes
             let wins = playersObj[currentPlayer].won;
             let losses = playersObj[currentPlayer].lost;
             let ratio = getRatio(wins, losses);
+            let name = formatUserForMessage(currentPlayer);
 
-            msg += '<@' + currentPlayer + '>: *' 
-                + wins + '-' + losses + '* ('+ratio+')\n';
+            msg += ''+name+': *'+wins + '-' + losses + '* ('+ratio+')\n';
 
         }
 
@@ -325,8 +393,9 @@ function getConfirmMsg(message, userFrom, timestamp) {
     let reply = {
         attachments: []
     };
+    let name = formatUserForMessage(userFrom)
     reply.attachments.push({
-        "fallback": '<@' + userFrom + '> recorded a beirut game including you!',
+        "fallback": ''+name+' recorded a beirut game with you!',
         "pretext": message,
         "footer": "To deny game, react on this message",
         "mrkdwn_in": ["pretext"],
@@ -388,6 +457,10 @@ function denyGame(denier, resp, bot) {
     let l1 = game.losers[0];
     let l2 = game.losers[1];
     let liar = game.logger;
+    let w1Name = formatUserForMessage(w1);
+    let w2Name = formatUserForMessage(w2);
+    let l1Name = formatUserForMessage(l1);
+    let l2Name = formatUserForMessage(l2);
 
     let result = logging.deny({'timestamp': timestamp, 'denier': denier});
 
@@ -396,22 +469,22 @@ function denyGame(denier, resp, bot) {
         let msg = '';
         let liarMsg = '';
         if (denier === l1 || denier === l2) {
-            msg = 'You successfully deleted the game against <@'+w1+'> and <@'+w2+'>'
+            msg = 'You successfully deleted the game against '+w1Name+' and '+ w2Name
                 + ' on <!date^' + timestamp + '^{date_short} at {time}| '
                 + 'February 18th, 2014 at 6:39 AM PST>';
         } else if (denier === w1 || denier === w2) {
-            msg = 'You successfully deleted the game against <@'+l1+'> and <@'+l2+'>'
+            msg = 'You successfully deleted the game against '+l1Name+' and '+ l2Name
                 + ' on <!date^' + timestamp + '^{date_short} at {time}| '
                 + 'February 18th, 2014 at 6:39 AM PST>';
         }
         messageUser(denier, msg, bot);
         if (liar === l1 || liar === l2) {
-            liarMsg = 'The game you played against <@'+w1+'> and <@'+w2+'>'
+            liarMsg = 'The game you played against '+w1Name+' and '+w2Name
                 + ' on <!date^' + timestamp + '^{date_short} at {time}| '
                 + 'February 18th, 2014 at 6:39 AM PST>'
                 + ' was deleted by <@'+denier+'>.';
         } else if (liar === w1 || liar === w2) {
-            liarMsg = 'The game you played against <@'+l1+'> and <@'+l2+'>'
+            liarMsg = 'The game you played against '+l1Name+' and '+l2Name
                 + ' on <!date^' + timestamp + '^{date_short} at {time}| '
                 + 'February 18th, 2014 at 6:39 AM PST>'
                 + ' was deleted by <@'+denier+'>';
@@ -424,12 +497,12 @@ function denyGame(denier, resp, bot) {
         messageUser(denier, msg, bot);
         let liarMsg = '';
         if (liar === l1 || liar === l2) {
-            liarMsg = 'The game you played against <@'+w1+'> and <@'+w2+'>'
+            liarMsg = 'The game you played against '+w1Name+' and '+w2Name
                 + ' on <!date^' + timestamp + '^{date_short} at {time}| '
                 + 'February 18th, 2014 at 6:39 AM PST>'
                 + ' was denied by <@'+denier+'>. If one more person denies this game, it will be deleted.';
         } else if (liar === w1 || liar === w2) {
-            liarMsg = 'The game you played against <@'+l1+'> and <@'+l2+'>'
+            liarMsg = 'The game you played against '+l1Name+' and '+l2Name
                 + ' on <!date^' + timestamp + '^{date_short} at {time}| '
                 + 'February 18th, 2014 at 6:39 AM PST>'
                 + ' was denied by <@'+denier+'> If one more person denies this game, it will be deleted.';
@@ -449,6 +522,7 @@ function messageUser(user, message, bot = null) {
         console.log('SUCKS, BUT BOT ISN\'T DEFINED, GOOD LUCK');
         return;
     }
+    if (!isGuestUser(user)) {
     bot.startPrivateConversation(
         { 'user': user }, function (err, convo) {
             if (err) {
@@ -459,25 +533,23 @@ function messageUser(user, message, bot = null) {
                 }
             }
         });
+    }
 }
 
-// //only run this function if you want to recalculate everyone's elo
-// function reCalculateElos() {
+// //only run this function if you want to recalculate the players file stats
+function reCalculatePlayers() {
     
-//     let records = JSON.parse(fs.readFileSync('json/records.json'));
-//     fs.writeFileSync('json/players.json', '{}');
-//     let numRecords = records.length;
-//     console.log('Processing', numRecords, 'games...');
+    let records = JSON.parse(fs.readFileSync('json/records.json'));
+    fs.writeFileSync('json/players.json', '{}');
+    let numRecords = records.length;
     
-//     for (index in records) {
-//         let scoreObj = records[index];
-//         let newElos = logging.calcEloDelta(scoreObj['winner'], scoreObj['loser'], scoreObj['win-score'], scoreObj['lose-score']);
-//         logging.updateElos(newElos);
-//         let progNum = Math.round(index / numRecords * 20);
-//     }
-//     console.log('Elo calculations complete.');
+    for (index in records) {
+        let gameObj = records[index];
+        logging.logScore(gameObj, false);
+    }
+    console.log('Player re-calculations complete.');
 
-// }
+}
 
 hears(['help'], 'direct_message,direct_mention,mention', (bot, message) => {
 
@@ -705,6 +777,28 @@ hears(['list'], 'direct_message', (bot, message) => {
 
 });
 
+//command "add [new guest]"
+hears(['add'], 'direct_message', (bot, message) => {
+    
+    const { user, text } = message;
+    let words = text.split(' ');
+
+    //they entered the right command
+    //and the user they want to add isn't in the system yet
+    if (words[0].toUpperCase() === 'ADD' && words.length === 2 && !isUser(words[1])) {
+        guest_users = JSON.parse(fs.readFileSync('json/guest_users.json'));
+        guest_users.push(words[1]);
+        fs.writeFileSync('json/guest_users.json', JSON.stringify(guest_users));
+
+        bot.reply(message, 'Successfully added '+words[1]+' as a guest user!');
+    } else if (words[0].toUpperCase() === 'ADD' && words.length === 2 && isUser(words[1])) {
+        bot.reply(message, words[1] + ' is already a registered guest! Log your game with them!');
+    } else {
+        bot.reply(message, 'Incorrect format! Add command format:\nAdd [new guest]');
+    }
+
+});
+
 //returns all the game objects for the last week
 function getLastWeek() {
     let records = JSON.parse(fs.readFileSync('json/records.json'));
@@ -720,7 +814,17 @@ function getLastWeek() {
 }
 
 function isUser(word) {
-    return (/<@([A-Z0-9]{9})>/.test(word));
+    if (/<@([A-Z0-9]{9})>/.test(word)) {
+        return true;
+    } else {
+        //find out if they are a guest user
+        for (let i in guest_users) {
+            if (word.toUpperCase() === guest_users[i].toUpperCase()) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 function getRatio(wins, losses) {
@@ -731,32 +835,39 @@ function getRatio(wins, losses) {
     }
 }
 
-hears(['broadcast'], 'direct_message', (bot, message) => {
-    //broadcast a message if a password is accepted
-    const { user, text } = message;
-
-    let words = text.split(' ');
-    let helpMsg = 'Command format:\n'
-        + 'Broadcast [password] [message]'; 
-
-    if (words[0].toUpperCase() !== 'BROADCAST') {
-        return;
+//users can also be from the guest list.
+function formatUserForMessage(user) {
+    if (/([A-Z0-9]{9})/.test(user)) {
+        //user is a slack user
+        return '<@'+user+'>';
+    } else {
+        //capitalizes name
+        for (let i in guest_users) {
+            if (user.toUpperCase() === guest_users[i].toUpperCase()) {
+                return guest_users[i];
+            }
+        }
     }
+}
 
-    //TODO
-    //dummy password. Change this to an untracked config file in github
-    if (words.length >= 2 && words[1] === 'lodgePass') {
-        words.splice(0,2);
-        let msg = words.join(' ');
-        //console.log('Sending message:', msg);
-        //TODO change this to be a direct message to everyone
-        bot.say({
-            text: msg,
-            channel: 'C8UALLR2P' // bros_and_pledges channel
-            //NOTE: This channel ID may change every semester.
-            //TODO: Set up a check to find the bros_and_pledges channel
-            //channel: 'G7VC8LPP1' // bot testing channel
-        });
+function formatUserForLogging(word) {
+    if (!isUser(word)) {
+        console.log('User is not valid, will not format name for logging');
+        return 'invalid user';
+    } else if (/<@([A-Z0-9]{9})>/.test(word)) {
+        //user is in the form <@ABCDEFGH>
+        return word.slice(2, -1);
+    } else {
+        //user is a guest user
+        //use the format stored in the guest_users file
+        for (let i in guest_users) {
+            if (word.toUpperCase() === guest_users[i].toUpperCase()) {
+                return guest_users[i];
+            }
+        }
     }
+}
 
-});
+function isGuestUser(name) {
+    return isUser(name) && !(/<@([A-Z0-9]{9})>/.test(name));
+}

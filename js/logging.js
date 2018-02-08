@@ -2,7 +2,7 @@ const fs = require('fs');
 
 module.exports = {
     
-    logScore: function (game) {
+    logScore: function (game, newGame) {
 
         function updatePlayers (players) {
 
@@ -23,9 +23,11 @@ module.exports = {
                     //they broke a losing streak
                     notifications.push({
                         type: 'streak break',
+                        subtype: 'losing',
                         user: w1,
-                        length: playersFile[w1].streak_length,
-                        message: '<@'+w2+'> just helped <@'+w1+'> break a '+playersFile[w1].streak_length+' game losing streak!'
+                        teammate: w2,
+                        opponents: [l1,l2],
+                        slength: playersFile[w1].streak_length
                     });
                     playersFile[w1].streak = 'winning';
                     playersFile[w1].streak_length = 1;
@@ -34,9 +36,11 @@ module.exports = {
                     playersFile[w1].streak_length++;
                     notifications.push({
                         type: 'streak continue',
+                        subtype: 'winning',
                         user: w1,
-                        length: playersFile[w1].streak_length,
-                        message: '<@'+w1+'> is on a '+playersFile[w1].streak_length+' game winning streak!'
+                        teammate: w2,
+                        opponents: [l1,l2],
+                        slength: playersFile[w1].streak_length
                     });
                 }
             } else {
@@ -56,9 +60,11 @@ module.exports = {
                     //they broke a losing streak
                     notifications.push({
                         type: 'streak break',
+                        subtype: 'losing',
                         user: w2,
-                        length: playersFile[w2].streak_length,
-                        message: '<@'+w1+'> just helped <@'+w2+'> break a '+playersFile[w2].streak_length+' game losing streak!'
+                        teammate: w1,
+                        opponents: [l1,l2],
+                        slength: playersFile[w2].streak_length
                     });
                     playersFile[w2].streak = 'winning';
                     playersFile[w2].streak_length = 1;
@@ -67,9 +73,11 @@ module.exports = {
                     playersFile[w2].streak_length++;
                     notifications.push({
                         type: 'streak continue',
+                        subtype: 'winning',
                         user: w2,
-                        length: playersFile[w2].streak_length,
-                        message: '<@'+w2+'> is on a '+playersFile[w2].streak_length+' game winning streak!'
+                        teammate: w1,
+                        opponents: [l1,l2],
+                        slength: playersFile[w2].streak_length
                     });
                 }
             } else {
@@ -89,9 +97,11 @@ module.exports = {
                     //they lost a winning streak
                     notifications.push({
                         type: 'streak break',
+                        subtype: 'winning',
                         user: l1,
-                        length: playersFile[l1].streak_length,
-                        message: '<@'+w1+'> and <@'+w2+'> ended <@'+l1+'>\'s '+playersFile[l1].streak_length+' game winning streak!'
+                        teammate: l2,
+                        opponents: [w1,w2],
+                        slength: playersFile[l1].streak_length
                     });
                     playersFile[l1].streak = 'losing';
                     playersFile[l1].streak_length = 1;
@@ -100,9 +110,11 @@ module.exports = {
                     playersFile[l1].streak_length++;
                     notifications.push({
                         type: 'streak continue',
+                        subtype: 'losing',
                         user: l1,
-                        length: playersFile[l1].streak_length,
-                        message: '<@'+l1+'> is on a '+playersFile[l1].streak_length+' game losing streak!'
+                        teammate: l2,
+                        opponents: [w1,w2],
+                        slength: playersFile[l1].streak_length
                     });
                 }
             } else {
@@ -122,9 +134,11 @@ module.exports = {
                     //they lost a winning streak
                     notifications.push({
                         type: 'streak break',
+                        subtype: 'winning',
                         user: l2,
-                        length: playersFile[l2].streak_length,
-                        message: '<@'+w1+'> and <@'+w2+'> ended <@'+l2+'>\'s '+playersFile[l2].streak_length+' game winning streak!'
+                        teammate: l1,
+                        opponents: [w1,w2],
+                        slength: playersFile[l2].streak_length
                     });
                     playersFile[l2].streak = 'losing';
                     playersFile[l2].streak_length = 1;
@@ -133,9 +147,11 @@ module.exports = {
                     playersFile[l2].streak_length++;
                     notifications.push({
                         type: 'streak continue',
+                        subtype: 'losing',
                         user: l2,
-                        length: playersFile[l2].streak_length,
-                        message: '<@'+l2+'> is on a '+playersFile[l2].streak_length+' game losing streak!'
+                        teammate: l1,
+                        opponents: [w1,w2],
+                        slength: playersFile[l2].streak_length
                     });
                 }
             } else {
@@ -154,9 +170,11 @@ module.exports = {
         }
 
         // Read, push, write
-        let records = JSON.parse(fs.readFileSync('json/records.json'));
-        records.push(game);
-        fs.writeFileSync('json/records.json', JSON.stringify(records));
+        if (newGame === true) {
+            let records = JSON.parse(fs.readFileSync('json/records.json'));
+            records.push(game);
+            fs.writeFileSync('json/records.json', JSON.stringify(records));
+        }
 
         let players = {
             'w1': game.winners[0],
