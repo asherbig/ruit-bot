@@ -42,7 +42,7 @@ let game = {
 
 ### Command Syntaxes
 
-All commands are done through direct messages with Ruit-Bot in order to reduce spam in our public channels
+All commands are done through direct messages with Ruit-Bot in order to reduce spam in our public channels.
 For any command with a guest instead of a slack user, just type their name without the "@"
 
 To record a game:
