@@ -1,29 +1,25 @@
 {
-  "name": "pongbot",
-  "version": "1.0.0",
-  "description": "A Slack bot to track ping-pong stats",
-  "main": "bot.js",
+  "name": "ruit-bot",
+  "version": "0.6.9",
+  "description": "Ruit stat tracker",
+  "main": "app.js",
   "scripts": {
-    "test": "node bot.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dfridkin/pingpong-bot.git"
+    "url": "git+https://github.com/asherbig/ruit-bot.git"
   },
-  "keywords": [
-    "slack",
-    "bot",
-    "ping-pong"
-  ],
-  "author": "Daniel Fridkin & Alex Herbig",
+  "author": "Alex Herbig",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dfridkin/pingpong-bot/issues"
+    "url": "https://github.com/asherbig/ruit-bot/issues"
   },
-  "homepage": "https://github.com/dfridkin/pingpong-bot#readme",
+  "homepage": "https://github.com/asherbig/ruit-bot#readme",
   "dependencies": {
-    "botkit": "^0.6.7",
+    "botkit": "^0.6.9",
     "forever": "^0.15.3",
     "fs": "0.0.1-security",
+    "node-schedule": "^1.3.0"
   }
 }
