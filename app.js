@@ -594,7 +594,7 @@ function pollUsers(members) {
             { 'user': members[i] }, function (err, convo) {
                 if (!err && convo) {
                     convo.say({
-                        text: 'This is the DM to log beiruit games!\n'
+                        text: '*This is the DM to log beiruit games!*\n\n'
                             + helpMsg, mrkdown: true
                     });
                 }
