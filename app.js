@@ -639,7 +639,7 @@ hears(['list'], 'direct_message', (bot, message) => {
     //this means they entered List @User
     if (words.length === 2 && isUser(words[1])) {
         //if at least 2 parameters and correct format so far, get user
-        user1 = words[1].slice(2, -1);
+        user1 = formatUserForLogging(words[1]);
         let records = JSON.parse(fs.readFileSync('json/records.json'));
         let wins = 0;
         let losses = 0;
@@ -716,8 +716,8 @@ hears(['list'], 'direct_message', (bot, message) => {
     //they entered the command "List @TeamMember1 @TeamMember2"
     //want to list all the games played by a certain team
     if (words.length === 3 && isUser(words[1]) && isUser(words[2])) {
-        user1 = words[1].slice(2, -1);
-        user2 = words[2].slice(2, -1);
+        user1 = formatUserForLogging(words[1]);
+        user2 = formatUserForLogging(words[2]);
 
         let wins = 0;
         let losses = 0;
@@ -748,8 +748,8 @@ hears(['list'], 'direct_message', (bot, message) => {
 
     //they entered the command "List @User1 vs @User2"
     if (words.length === 4 && isUser(words[1]) && isUser(words[3]) && words[2].toUpperCase() === 'VS') {
-        user1 = words[1].slice(2, -1);
-        user2 = words[3].slice(2, -1);
+        user1 = formatUserForLogging(words[1]);
+        user2 = formatUserForLogging(words[3]);
 
         let wins = 0;
         let losses = 0;
