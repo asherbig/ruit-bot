@@ -640,6 +640,7 @@ hears(['list'], 'direct_message', (bot, message) => {
     if (words.length === 2 && isUser(words[1])) {
         //if at least 2 parameters and correct format so far, get user
         user1 = formatUserForLogging(words[1]);
+        let user1Name = formatUserForMessage(user1);
         let records = JSON.parse(fs.readFileSync('json/records.json'));
         let wins = 0;
         let losses = 0;
@@ -652,23 +653,27 @@ hears(['list'], 'direct_message', (bot, message) => {
             let w2 = game.winners[1];
             let l1 = game.losers[0];
             let l2 = game.losers[1];
+            let w1Name = formatUserForMessage(game.winners[0]);
+            let w2Name = formatUserForMessage(game.winners[1]);
+            let l1Name = formatUserForMessage(game.losers[0]);
+            let l2Name = formatUserForMessage(game.losers[1]);
             let cups = game.cups;
             if (w1 === user1) { //if the user was a winner
-                outMsg += '*(W)* with <@'+w2+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(W)* with '+w2Name+' vs '+l1Name+' and '+l2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
                 wins++;
             } else if (w2 === user1) { //if the user was a winner
-                outMsg += '*(W)* with <@'+w1+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(W)* with '+w1Name+' vs '+l1Name+' and '+l2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
                 wins++;
             } else if (l1 === user1) { //if the user was a loser
-                outMsg += '*(L)* with <@'+l2+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(L)* with '+l2Name+' vs '+w1Name+' and '+w2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
                 losses++
             } else if (l2 === user1){ //if the user was a loser
-                outMsg += '*(L)* with <@'+l1+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(L)* with '+l1Name+' vs '+w1Name+' and '+w2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
                 losses++
             }
         }
         let ratio = getRatio(wins, losses);
-        outMsg = '*<@'+user1+'>\'s total record: ('+wins+'-'+losses+')* _('+ratio+')_\n'+ outMsg;
+        outMsg = '*'+user1Name+'\'s total record: ('+wins+'-'+losses+')* _('+ratio+')_\n'+ outMsg;
         bot.reply(message, outMsg);
         return;
     }
@@ -685,10 +690,10 @@ hears(['list'], 'direct_message', (bot, message) => {
             let game = games[index];
             let cups = game.cups;
             let date = new Date(game.timestamp * 1000);
-            let w1 = game.winners[0];
-            let w2 = game.winners[1];
-            let l1 = game.losers[0];
-            let l2 = game.losers[1];
+            let w1Name = formatUserForMessage(game.winners[0]);
+            let w2Name = formatUserForMessage(game.winners[1]);
+            let l1Name = formatUserForMessage(game.losers[0]);
+            let l2Name = formatUserForMessage(game.losers[1]);
 
             let verb = ' beat ';
             //get the verb
@@ -700,11 +705,11 @@ hears(['list'], 'direct_message', (bot, message) => {
     
             //formatting a single game for the summary message
             if (cups === 1) {
-                outMsg = outMsg + '*<@'+w1+'> and <@'+w2+'>*' + verb + '<@'
-                    + l1 + '> and <@'+ l2+ '> by ' + cups + ' cup on '+formatDate(date)+'\n';
+                outMsg = outMsg+'*'+w1Name+' and '+w2Name+'*'+verb+l1Name+'and '+l2Name
+                    +' by ' + cups + ' cup on '+formatDate(date)+'\n';
             } else {
-                outMsg = outMsg + '*<@'+w1+'> and <@'+w2+'>*' + verb + '<@'
-                    + l1 + '> and <@'+ l2 +'> by ' + cups + ' cups on '+formatDate(date)+'\n';
+                outMsg = outMsg+'*'+w1Name+' and '+w2Name+'*'+verb+l1Name+'and '+l2Name
+                +' by ' + cups + ' cups on '+formatDate(date)+'\n';
             }
             numGames++;
         }
@@ -718,6 +723,8 @@ hears(['list'], 'direct_message', (bot, message) => {
     if (words.length === 3 && isUser(words[1]) && isUser(words[2])) {
         user1 = formatUserForLogging(words[1]);
         user2 = formatUserForLogging(words[2]);
+        let user1Name = formatUserForMessage(user1);
+        let user2Name = formatUserForMessage(user2);
 
         let wins = 0;
         let losses = 0;
@@ -730,18 +737,22 @@ hears(['list'], 'direct_message', (bot, message) => {
             let w2 = game.winners[1];
             let l1 = game.losers[0];
             let l2 = game.losers[1];
+            let w1Name = formatUserForMessage(w1);
+            let w2Name = formatUserForMessage(w2);
+            let l1Name = formatUserForMessage(l1);
+            let l2Name = formatUserForMessage(l2);
             let cups = game.cups;
 
             if ((w1 === user1 && w2 === user2) || (w1 === user2 && w2 === user1)) { //they won the game as team
                 wins++;
-                outMsg += '*(W)* vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(W)* vs '+l1Name+' and '+l2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
             } else if ((l1 === user1 && l2 === user2) || (l1 === user2 && l2 === user1)) { //they lost
                 losses++;
-                outMsg += '*(L)* vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(L)* vs '+w1Name+' and '+w2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
             }
         }
         let ratio = getRatio(wins, losses);
-        outMsg = '*<@'+user1+'> with <@'+user2+'> ('+wins+'-'+losses+')* _('+ratio+')_\n' + outMsg;
+        outMsg = '*'+user1Name+' with '+user2Name+' ('+wins+'-'+losses+')* _('+ratio+')_\n' + outMsg;
         bot.reply(message, outMsg);
         return;
     }
@@ -750,6 +761,8 @@ hears(['list'], 'direct_message', (bot, message) => {
     if (words.length === 4 && isUser(words[1]) && isUser(words[3]) && words[2].toUpperCase() === 'VS') {
         user1 = formatUserForLogging(words[1]);
         user2 = formatUserForLogging(words[3]);
+        let user1Name = formatUserForMessage(user1);
+        let user2Name = formatUserForMessage(user2);
 
         let wins = 0;
         let losses = 0;
@@ -762,24 +775,28 @@ hears(['list'], 'direct_message', (bot, message) => {
             let w2 = game.winners[1];
             let l1 = game.losers[0];
             let l2 = game.losers[1];
+            let w1Name = formatUserForMessage(w1);
+            let w2Name = formatUserForMessage(w2);
+            let l1Name = formatUserForMessage(l1);
+            let l2Name = formatUserForMessage(l2);
             let cups = game.cups;
 
             if (w1 === user1 && (l1 === user2 || l2 === user2)) { //if user1 was a winner
-                outMsg += '*(W)* with <@'+w2+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(W)* with '+w2Name+' vs '+l1Name+' and '+l2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
                 wins++;
             } else if (w2 === user1 && (l1 === user2 || l2 === user2)) { //if user1 was a winner
-                outMsg += '*(W)* with <@'+w1+'> vs <@'+l1+'> and <@'+l2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(W)* with '+w1Name+' vs '+l1Name+' and '+l2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
                 wins++;
             } else if (l1 === user1 && (w1 === user2 || w2 === user2)) { //if user1 was a loser
-                outMsg += '*(L)* with <@'+l2+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(L)* with '+l2Name+' vs '+w1Name+' and '+w2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
                 losses++
             } else if (l2 === user1 && (w1 === user2 || w2 === user2)) { //if user1 was a loser
-                outMsg += '*(L)* with <@'+l1+'> vs <@'+w1+'> and <@'+w2+'> by *'+cups+' cups* on '+formatDate(date)+'\n';
+                outMsg += '*(L)* with '+l1Name+' vs '+w1Name+' and '+w2Name+' by *'+cups+' cups* on '+formatDate(date)+'\n';
                 losses++
             }
         }
         let ratio = getRatio(wins, losses);
-        outMsg = '*<@'+user1+'> vs <@'+user2+'> ('+wins+'-'+losses+')* _('+ratio+')_\n' + outMsg;
+        outMsg = '*'+user1Name+' vs '+user2Name+' ('+wins+'-'+losses+')* _('+ratio+')_\n' + outMsg;
         bot.reply(message, outMsg);
         return;
     }
