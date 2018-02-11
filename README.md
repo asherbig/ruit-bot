@@ -6,7 +6,7 @@ Beirut is a game played between two teams of two. The idea of ruit-bot is to sto
 
 ##### Table of Contents
 
-* [Interacting with Pongbot](#interacting-with-pongbot)
+* [Interacting with Pongbot](#interacting-with-Ruit-Bot)
 * [Player and Game Tracking](#player-and-game-tracking)
 * [Command Syntaxes](#command-syntax)
 
