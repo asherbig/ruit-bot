@@ -33,7 +33,7 @@ var j = schedule.scheduleJob(rule, function() {
         let w1Name = formatUserForMessage(g.winners[0]);
         let w2Name = formatUserForMessage(g.winners[1]);
         let l1Name = formatUserForMessage(g.losers[0]);
-        let l2Name = formatUserForMessage(g.losers[0]);
+        let l2Name = formatUserForMessage(g.losers[1]);
 
         //formatting a single game for the summary message
         if (cups === 1) {
