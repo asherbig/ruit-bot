@@ -10,56 +10,163 @@ const schedule = require('node-schedule');
 
 //setting daily message properties
 var rule = new schedule.RecurrenceRule();
-rule.dayOfWeek = 1; //every Monday
-rule.hour = 12; //this will do a message every week, Monday at noon
-rule.minute = 0;
+// rule.dayOfWeek = 1; //every Monday
+// rule.hour = 12; //this will do a message every week, Monday at noon
+// rule.minute = 0;
+
+rule.dayOfWeek = 0; //every Sunday
+rule.hour = 22; //this will do a message every week, Monday at noon
+rule.minute = 18;
 
 var j = schedule.scheduleJob(rule, function() {
     let games = getLastWeek();
-    console.log(games);
+    //console.log('games played:', games);
     outMsg = '';
+    let players = {};
     for (let index in games) {
         
         let g = games[index];
-        //console.log(g);
-        let verb = ' beat ';
+        let w1 = g.winners[0];
+        let w2 = g.winners[1];
+        let l1 = g.losers[0];
+        let l2 = g.losers[1];
         let cups = g.cups;
-        //get the verb
-        if (cups == 10) { //ls = loseScore
-            verb = ' skunked ';
-        } else if (cups > 5) {
-            verb = ' destroyed ';
-        }
-        let w1Name = formatUserForMessage(g.winners[0]);
-        let w2Name = formatUserForMessage(g.winners[1]);
-        let l1Name = formatUserForMessage(g.losers[0]);
-        let l2Name = formatUserForMessage(g.losers[1]);
 
-        //formatting a single game for the summary message
-        if (cups === 1) {
-            outMsg = outMsg + '*'+w1Name+' and '+w2Name+'*' + verb + l1Name
-                + ' and '+l2Name+' by ' + cups + ' cup\n';
+        winnerDrank = cups/2;
+        loserDrank = 5;
+
+        //basically creating a players object
+        if (players[w1]) {
+            players[w1].wins++;
+            players[w1].drank += winnerDrank;
         } else {
-            outMsg = outMsg + '*'+w1Name+' and '+w2Name+'*' + verb + l1Name
-                + ' and '+l2Name+' by ' + cups + ' cups\n';
+            players[w1] = {wins: 1, losses: 0, drank: winnerDrank};
         }
+        if (players[w2]) {
+            players[w2].wins++;
+            players[w2].drank += winnerDrank;
+        } else {
+            players[w2] = {wins: 1, losses: 0, drank: winnerDrank};
+        }
+        if (players[l1]) {
+            players[l1].losses++;
+            players[l1].drank += loserDrank;
+        } else {
+            players[l1] = {wins: 0, losses: 1, drank: loserDrank};
+        }
+        if (players[l2]) {
+            players[l2].losses++;
+            players[l2].drank += loserDrank;
+        } else {
+            players[l2] = {wins: 0, losses: 1, drank: loserDrank};
+        }
+
     }
+    //want to print out the best (over 500) player
+    //want to print out the worst (under 500) player
+    //want to print out the most games played player
+    //want to print out the most cups drank player
+
+    //might be ties. These arrays hold the JSON object for each player
+    let bestPlayers = [];
+    let worstPlayers = [];
+    let mostGamesPlayers = [];
+    let mostDrank = [];
+    let firstPlayer = true;
+    for (let player in players) {
+        let stats = players[player];
+        let wins = stats.wins;
+        let losses = stats.losses;
+        let drank = Math.round(stats.drank - .5); //round down
+        //calculate games over 500
+        let over500 = wins - losses;
+        //calculate total games
+        let total = wins + losses;
+        let summary = {
+            player: player,
+            wins: wins,
+            losses: losses,
+            drank: drank,
+            over500: over500,
+            total: total
+        }
+        //console.log('Player Summary:', summary);
+        if (firstPlayer) {
+            //the first player will go in all the categories
+            bestPlayers.push(summary);
+            worstPlayers.push(summary);
+            mostGamesPlayers.push(summary);
+            mostDrank.push(summary);
+        } else {
+            //compare to see if they should be replaced for any stat leader
+            if (bestPlayers[0].over500 < over500) {
+                bestPlayers = [summary];
+            } else if (bestPlayers[0].over500 === over500) {
+                bestPlayers.push(summary);
+            }
+            if (worstPlayers[0].over500 > over500) {
+                worstPlayers = [summary];
+            } else if (worstPlayers[0].over500 === over500) {
+                worstPlayers.push(summary);
+            }
+            if (mostGamesPlayers[0].total < total) {
+                mostGamesPlayers = [summary];
+            } else if (mostGamesPlayers[0].total === total) {
+                mostGamesPlayers.push(summary);
+            }
+            if (mostDrank[0].drank < drank) {
+                mostDrank = [summary];
+            } else if (mostDrank[0].drank === drank) {
+                mostDrank.push(summary);
+            }
+        }
+        firstPlayer = false;
+    }
+
+    console.log('bestPlayers:', bestPlayers);
+    console.log('worstPlayers:', worstPlayers);
+    console.log('mostPlayed:', mostGamesPlayers);
+    console.log('mostDrank:', mostDrank);
+
+    outMsg += '*Best Players (' + bestPlayers[0].over500 + ' games over 500): *';
+    outMsg += listUsersFromArray(bestPlayers);
+    // outMsg += '.\n';
+    outMsg += '\n';
+
+    outMsg += '*Worst Players (' + -worstPlayers[0].over500 + ' games under 500): *';
+    outMsg += listUsersFromArray(worstPlayers);
+    // outMsg += '.\n';
+    outMsg += '\n';
+
+    outMsg += '*Played the most games (' + mostGamesPlayers[0].total + ' games played): *';
+    outMsg += listUsersFromArray(mostGamesPlayers);
+    // outMsg += '.\n';
+    outMsg += '\n';
+
+    outMsg += '*Drank the most (' + mostDrank[0].drank + ' cups drank): *';
+    outMsg += listUsersFromArray(mostDrank);
+    // outMsg += '.\n';
+    outMsg += '\n';
+
+    outMsg += 'For more stats, direct message ruit-bot "help"';
+    //console.log('outMsg:', outMsg);
+    
     if (games.length === 1) {
         outMsg = '*' + games.length + ' game played in the last week!*\n' + outMsg;
     } else {
         outMsg = '*' + games.length + ' games played in the last week!*\n' + outMsg;
     }
     if (games.length === 0) {
-        outMsg = outMsg + 'Play some games this week!'
+        outMsg = outMsg + ':thinking_face:'
     }
 
     //UNCOMMENT THIS BEFORE PUSHING TO PRODUCTION
     bot.say({
             text: outMsg,
-            channel: 'C8UALLR2P' // bros_and_pledges channel
+            //channel: 'C8UALLR2P' // bros_and_pledges channel
             //NOTE: This channel ID may change every semester.
             //TODO: Set up a check to find the bros_and_pledges channel
-            //channel: 'G7VC8LPP1' // bot testing channel
+            channel: 'G7VC8LPP1' // bot testing channel
         });
 
 });
@@ -705,10 +812,10 @@ hears(['list'], 'direct_message', (bot, message) => {
     
             //formatting a single game for the summary message
             if (cups === 1) {
-                outMsg = outMsg+'*'+w1Name+' and '+w2Name+'*'+verb+l1Name+'and '+l2Name
+                outMsg = outMsg+'*'+w1Name+' and '+w2Name+'*'+verb+l1Name+' and '+l2Name
                     +' by ' + cups + ' cup on '+formatDate(date)+'\n';
             } else {
-                outMsg = outMsg+'*'+w1Name+' and '+w2Name+'*'+verb+l1Name+'and '+l2Name
+                outMsg = outMsg+'*'+w1Name+' and '+w2Name+'*'+verb+l1Name+' and '+l2Name
                 +' by ' + cups + ' cups on '+formatDate(date)+'\n';
             }
             numGames++;
@@ -928,4 +1035,33 @@ function formatUserForLogging(word) {
 
 function isGuestUser(name) {
     return isUser(name) && !(/<@([A-Z0-9]{9})>/.test(name));
+}
+
+function sortByRatio(summaryObject) {
+
+    // Create an array of names sorted by win-loss ratio
+    return Object.keys(summaryObject).sort(function (a, b) { 
+        return getRatio(summaryObject[b].wins, summaryObject[b].losses) 
+            - getRatio(summaryObject[a].wins, summaryObject[a].losses); });
+
+}
+
+function listUsersFromArray(array) {
+    let appendString = '';
+    for (let i = 0; i < array.length; i++) {
+        let name = formatUserForMessage(array[i].player);
+        let winloss = '(' + array[i].wins + '-' + array[i].losses + ')';
+        let nameWinLoss = name + ' ' + winloss;
+        // if (i === array.length - 1 && array.length !== 1) {
+        //     //last player, use and
+        //     appendString += ' and ' + nameWinLoss;
+        // } else if (i === 0) {
+        //     appendString += nameWinLoss;
+        // } else {
+        //     appendString += ', ' + nameWinLoss
+        // }
+
+        appendString += '\n' + nameWinLoss;
+    }
+    return appendString;
 }
