@@ -10,13 +10,13 @@ const schedule = require('node-schedule');
 
 //setting daily message properties
 var rule = new schedule.RecurrenceRule();
-// rule.dayOfWeek = 1; //every Monday
-// rule.hour = 12; //this will do a message every week, Monday at noon
-// rule.minute = 0;
+rule.dayOfWeek = 1; //every Monday
+rule.hour = 12; //this will do a message every week, Monday at noon
+rule.minute = 0;
 
-rule.dayOfWeek = 0; //every Sunday
-rule.hour = 22; //this will do a message every week, Monday at noon
-rule.minute = 18;
+// rule.dayOfWeek = 0; //every Sunday
+// rule.hour = 22; //this will do a message every week, Monday at noon
+// rule.minute = 18;
 
 var j = schedule.scheduleJob(rule, function() {
     let games = getLastWeek();
@@ -163,10 +163,10 @@ var j = schedule.scheduleJob(rule, function() {
     //UNCOMMENT THIS BEFORE PUSHING TO PRODUCTION
     bot.say({
             text: outMsg,
-            //channel: 'C8UALLR2P' // bros_and_pledges channel
+            channel: 'C8UALLR2P' // bros_and_pledges channel
             //NOTE: This channel ID may change every semester.
             //TODO: Set up a check to find the bros_and_pledges channel
-            channel: 'G7VC8LPP1' // bot testing channel
+            //channel: 'G7VC8LPP1' // bot testing channel
         });
 
 });
@@ -206,7 +206,7 @@ bot.startRTM(function (err, bot, payload) {
                 console.log('Messaging new users!');
             }
             //UNCOMMENT THIS BEFORE IT GOES TO GITHUB
-            //pollUsers(difference);
+            pollUsers(difference);
             //pollUsers(["U54GUSFGE"]);
             fs.writeFileSync('json/users_config.json', JSON.stringify({ 'messaged': members }));
   
@@ -420,8 +420,8 @@ hears('beat', 'direct_message', (bot, message) => {
                     }
                     bot2.say({
                         text: msg,
-                        //channel: 'C8UALLR2P' // bros_and_pledges channel
-                        channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
+                        channel: 'C8UALLR2P' // bros_and_pledges channel
+                        //channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
                     });
                 }
             } else if (msgs[i].type === 'streak continue') {
@@ -441,8 +441,8 @@ hears('beat', 'direct_message', (bot, message) => {
                     }
                     bot2.say({
                         text: msg,
-                        //channel: 'C8UALLR2P' // bros_and_pledges channel
-                        channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
+                        channel: 'C8UALLR2P' // bros_and_pledges channel
+                        //channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
                     });
                 }
             }
