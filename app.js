@@ -163,7 +163,8 @@ var j = schedule.scheduleJob(rule, function() {
     //UNCOMMENT THIS BEFORE PUSHING TO PRODUCTION
     bot.say({
             text: outMsg,
-            channel: 'C8UALLR2P' // bros_and_pledges channel
+            //channel: 'C8UALLR2P' // bros_and_pledges channel
+            channel: 'CA7CPMECC' //beirut channel because normies were triggered in bros_and_pledges
             //NOTE: This channel ID may change every semester.
             //TODO: Set up a check to find the bros_and_pledges channel
             //channel: 'G7VC8LPP1' // bot testing channel
@@ -188,6 +189,24 @@ bot.startRTM(function (err, bot, payload) {
     apiFunctions = bot.api;
 
     reCalculatePlayers();
+
+    //get all the channels and store it in channels file
+    bot.api.conversations.list({'types': 'public_channel,private_channel,im,mpim'}, function(err,resp) {
+
+      if (!err) {
+        channel_list = resp;
+        json = JSON.stringify(resp);
+
+        fs.writeFile('json/channels.json', json, 'utf8', (err) => {
+          if (err) console.error(err);
+          else console.log('Up to date channel info saved to file!');
+        });
+
+      } else {
+        console.log('Error receiving channel list from API');
+        throw err;
+      }
+    }); //end channel list callback function
 
     //get all the users in the slack channel
     bot.api.users.list({}, function(err,resp) {
@@ -220,6 +239,7 @@ bot.startRTM(function (err, bot, payload) {
 const { hears } = controller;
 
 /* Action starts here */
+//TODO fix this function
 //This needs to be first to make sure broadcast is the
 // favored keyword. Could also solve this issue
 // by having a function for broadcasting messages
@@ -244,7 +264,8 @@ hears(['broadcast'], 'direct_message', (bot, message) => {
         //TODO change this to be a direct message to everyone
         bot.say({
             text: msg,
-            channel: 'C8UALLR2P' // bros_and_pledges channel
+            //channel: 'C8UALLR2P' // bros_and_pledges channel
+            channel: 'CA7CPMECC' //beirut channel because normies were triggered in bros_and_pledges
             //NOTE: This channel ID may change every semester.
             //TODO: Set up a check to find the bros_and_pledges channel
             //channel: 'G7VC8LPP1' // bot testing channel
@@ -363,12 +384,13 @@ hears('beat', 'direct_message', (bot, message) => {
         let outMsgWinner1 = 'You and '+w2Name+verb+l1Name+' and '+l2Name+' by '+cups+' '+cupWord;
         let outMsgWinner2 = 'You and '+w1Name+verb+l1Name+' and '+l2Name+' by '+cups+' '+cupWord;
 
-        //possibly message the bros_and_pledges group about a skunk?
+        //possibly message the slack ruit group about a skunk?
         if (cups === 10) {
             let outMsg = ''+w1Name+' and '+w2Name+' just skunked '+l1Name+' and '+l2Name+'!!!';
             bot.say({
                 text: outMsg,
-                channel: 'C8UALLR2P' // bros_and_pledges channel
+                //channel: 'C8UALLR2P' // bros_and_pledges channel
+                channel: 'CA7CPMECC' //beirut channel because normies were triggered in bros_and_pledges
                 //NOTE: This channel ID may change every semester.
                 //TODO: Set up a check to find the bros_and_pledges channel
                 //channel: 'G7VC8LPP1' // bot testing channel
@@ -420,7 +442,8 @@ hears('beat', 'direct_message', (bot, message) => {
                     }
                     bot2.say({
                         text: msg,
-                        channel: 'C8UALLR2P' // bros_and_pledges channel
+                        //channel: 'C8UALLR2P' // bros_and_pledges channel
+                        channel: 'CA7CPMECC' //beirut channel because normies were triggered in bros_and_pledges
                         //channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
                     });
                 }
@@ -441,7 +464,8 @@ hears('beat', 'direct_message', (bot, message) => {
                     }
                     bot2.say({
                         text: msg,
-                        channel: 'C8UALLR2P' // bros_and_pledges channel
+                        //channel: 'C8UALLR2P' // bros_and_pledges channel
+                        channel: 'CA7CPMECC' //beirut channel because normies were triggered in bros_and_pledges
                         //channel: 'G7VC8LPP1' //UNCOMMENT THE ABOVE LINE
                     });
                 }
