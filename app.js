@@ -128,28 +128,30 @@ var j = schedule.scheduleJob(rule, function() {
     console.log('mostPlayed:', mostGamesPlayers);
     console.log('mostDrank:', mostDrank);
 
-    outMsg += '*Best Players (' + bestPlayers[0].over500 + ' games over 500): *';
-    outMsg += listUsersFromArray(bestPlayers);
-    // outMsg += '.\n';
-    outMsg += '\n';
+    if (bestPlayers.length !== 1) {
+        outMsg += '*Best Players (' + bestPlayers[0].over500 + ' games over 500): *';
+        outMsg += listUsersFromArray(bestPlayers);
+        // outMsg += '.\n';
+        outMsg += '\n';
 
-    outMsg += '*Worst Players (' + -worstPlayers[0].over500 + ' games under 500): *';
-    outMsg += listUsersFromArray(worstPlayers);
-    // outMsg += '.\n';
-    outMsg += '\n';
+        outMsg += '*Worst Players (' + -worstPlayers[0].over500 + ' games under 500): *';
+        outMsg += listUsersFromArray(worstPlayers);
+        // outMsg += '.\n';
+        outMsg += '\n';
 
-    outMsg += '*Played the most games (' + mostGamesPlayers[0].total + ' games played): *';
-    outMsg += listUsersFromArray(mostGamesPlayers);
-    // outMsg += '.\n';
-    outMsg += '\n';
+        outMsg += '*Played the most games (' + mostGamesPlayers[0].total + ' games played): *';
+        outMsg += listUsersFromArray(mostGamesPlayers);
+        // outMsg += '.\n';
+        outMsg += '\n';
 
-    outMsg += '*Drank the most (' + mostDrank[0].drank + ' cups drank): *';
-    outMsg += listUsersFromArray(mostDrank);
-    // outMsg += '.\n';
-    outMsg += '\n';
+        outMsg += '*Drank the most (' + mostDrank[0].drank + ' cups drank): *';
+        outMsg += listUsersFromArray(mostDrank);
+        // outMsg += '.\n';
+        outMsg += '\n';
 
-    outMsg += 'For more stats, direct message ruit-bot "help"';
-    //console.log('outMsg:', outMsg);
+        outMsg += 'For more stats, direct message ruit-bot "help"';
+        //console.log('outMsg:', outMsg);
+    }
     
     if (games.length === 1) {
         outMsg = '*' + games.length + ' game played in the last week!*\n' + outMsg;
